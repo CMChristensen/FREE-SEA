@@ -1,0 +1,4 @@
+x = [-1:0.1:1];
+plot(x,abs(x));
+title('absolute value function'); %adds a title to the plot
+xlabel('x');ylabel('y'); %adds labels to x and y axes
