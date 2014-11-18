@@ -1,0 +1,7 @@
+function U = U(ECI, theta)
+U = (ECI^(1-theta)-1)/(1-theta)
+
+% theta = rate of inequality aversion
+
+% if Omega = 1
+    % U = ((c/c_0)^(1-theta)-1)/(1-theta)
