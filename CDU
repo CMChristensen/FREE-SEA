@@ -1,0 +1,7 @@
+function CDU = CDU(rho, L, U)
+CDU = int(exp(-rho*t)*L(t)*U(t)
+
+rho = 0.01 % rate of time preference
+% L = population
+% U = utility of representative individual
+% t = 1960-2100
