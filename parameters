@@ -1,7 +1,10 @@
-global LaborElast Depreciation SavingsRate t
+global LaborElast Depreciation SavingsRate t theta Omega
 
 LaborElast = 0.8;
 Depreciation = 0.1;
 SavingsRate= 0.2;
 
 t = 1960:1:2100;
+
+theta = 1
+Omega = 1
