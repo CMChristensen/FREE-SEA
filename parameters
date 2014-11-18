@@ -6,5 +6,5 @@ SavingsRate= 0.2;
 
 t = 1960:1:2100;
 
-theta = 1
-Omega = 1
+theta = 1;
+Omega = 1;
