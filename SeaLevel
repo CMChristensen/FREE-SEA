@@ -1,0 +1,466 @@
+% This code produces results of Vermeer and Rahmstorf. 
+% "Global Sea Level Linked to Global Temperature", PNAS 2009
+% For a description of what it does, see that paper.
+%
+% Code written by Stefan Rahmstorf and Martin Vermeer
+%
+% Please note that this is a scientific code to be used by scientists
+% who know what they are doing; it is not "fool-proof" for the general 
+% user in the sense that all combinations of parameter choices, options etc. 
+% have been thoroughly tested.
+% Please report any problems or errors to the authors.
+
+%------------------------------
+% Parameter and options setting
+%------------------------------
+% The code uses the SSAtrend of Moore et al. 2005 for smoothing the data,
+% which can be downloaded at http://www.glaciology.net/software/ssatrend-m
+% (As a simple matlab alternative, fitting a polynomial is available as
+% an option below. This is not recommended; it gives only a poor fit, 
+% although it has little effect on the future projections.) 
+% Reference: J. C. Moore, A. Grinsted, S. Jevrejeva, Eos 86, 226 (2005).
+
+
+detr='n'; % set to y or n, depending on whether detrending is wanted
+SSA='y'; % set to n if you don't have access to the SSAtrend smoother
+ed = 15; % embedding dimension (years) of SSAtrend smoother (15 was used in the paper)
+degree = 8; % degree of polynomial fit - only used if no SSAtrend available - not recommended!
+bin = '15'; % choose 5, 10, or 15 (as in the paper) year bins. Must be '5' for 'm'odel runs
+source = 'r'; % use climate 'm'odel or 'r'eality data
+%
+if source == 'm'
+   if bin == '15'
+      % Not implemented, gives nonsense
+      disp('Error: this bin size not allowed with model data!');
+   end
+   if bin == '10'
+      % Not implemented, gives nonsense
+      disp('Error: this bin size not allowed with model data!'); 
+   end
+end
+%
+chao = 'y'; % use Chao reservoir corr
+pump = 'n' % use ad-hoc groundwater pumping correction
+%
+iterate = 'y'; % iterate for lambda. No iteration -> estimate a only
+%
+if bin == '20'
+  dataspan = 1:6;
+end
+if bin == '15'
+ dataspan = [1:8]; % only for 15 years binning
+% dataspan = 1:4; % first half
+% dataspan = 5:8; % second half
+%  dataspan = [1:4] % experimenting
+end
+if bin == '5'
+  dataspan = 1:24;
+end
+if bin == '10'
+  dataspan = 1:12;
+end
+
+%
+% lambda: coefficient for linear combination of T and dT/dt (MV)
+% dH/dt = a T + b dT/dt = a (T + lambda dT/dt), so lambda = b/a
+%
+lambda = 0;
+
+%-----------------------
+% to load the model data
+
+%-----------------------
+if source== 'm'
+   startm=1750; % need to give start year of model run here!
+   % load model run from Maik
+   load ssh_steric_1750_2100_SRES.dat; % column 4 is A1FI, column 6 is B2
+   load sat_1750_2100_SRES.dat;
+   yearm=ssh_steric_1750_2100_SRES(:,1);
+   tempm=sat_1750_2100_SRES(:,4);
+   mmo=mean(tempm(1951-startm+1:1980-startm+1));
+   fprintf('Normalizing to 1951-1980, shift by: %8.4f\n', mmo);
+   tempm=tempm-mmo; %normalise to 1951-1980
+   levelm=ssh_steric_1750_2100_SRES(:,4);
+   levelm=levelm-levelm(1990-startm+1); %normalise to 1990
+end
+
+%----------------------------
+% loading real data
+%----------------------------
+
+% load the church & white sea level data
+load church_13221.txt;
+seayear = church_13221(:,1);
+sealevel = church_13221(:,2)/10;
+
+% Apply Chao et al (2008) reservoir correction:
+if chao == 'y'
+   sealevel = sealevel + 1.65 + (3.7/3.1415)*atan2(seayear-1978,13);
+end
+
+
+% Apply ad-hoc groundwater pumping correction:
+if pump == 'y'
+   figure(5); clf
+%   plot(sealevel); hold on
+   pumpyear = [1870:2100]+0.5;
+   pumpcorr = 0.015 *(pumpyear-seayear(1)).^2 / 132; % linear ramp-up of rate-o f-rise up to 0.3 mm/year
+%   aa=0.00118; taup=40; pumpcorr = aa*taup*exp((pumpyear-seayear(1))/taup)- aa*(pumpyear-seayear(1)); pumpcorr=pumpcorr-pumpcorr(1); % exponential ramp-up of rate-of-rise up to 0.5 mm/year
+   sealevel = sealevel - pumpcorr(1:132)';
+%   plot(sealevel,'r')
+   plot(pumpyear,pumpcorr)
+   futurepump = pumpcorr(231)-pumpcorr(121)
+   pumpcorr(131)
+   hold off
+end
+
+
+% load GISS global temperature data 
+load 'giss_landocean.txt';
+gissyear=giss_landocean(:,1); % column 1 is the year
+gisstemp=(giss_landocean(:,14) .* 0.01); % Column 14 is the annual global value
+
+
+% load the IPCC 2001 global temperature scenarios
+
+load ipcc_scenarios.dat
+ipccyear=ipcc_scenarios(:,1);
+% prepare vectors for shading low and high limits
+xt=[ipccyear; flipud(ipccyear)];
+yt=[ipcc_scenarios(:,2); flipud(ipcc_scenarios(:,3))]; 
+
+%----------------------------
+% apply smoothing to time series
+%----------------------------
+if SSA=='y'
+   smoothsealevel = ssatrend([seayear sealevel],ed);
+   smoothgisstemp = ssatrend([gissyear gisstemp],ed);
+else
+   % alternative smoothing using polynomial fit
+   [p1 s1 m1] = polyfit(seayear,sealevel,degree);
+   [smoothsealevel error1] = polyval(p1,seayear,s1,m1);
+   [p2 s2 m2] = polyfit(gissyear,gisstemp,degree);
+   [smoothgisstemp error2] = polyval(p2,gissyear,s2,m2);
+end
+
+% make sure we have always 127 elements
+gissyear = gissyear(1:2006-1880+1);
+smoothgisstemp = smoothgisstemp(1:2006-1880+1);
+
+%smoothed 1990 value, subtracted below
+g1990=(smoothsealevel(120)+smoothsealevel(121))/2; 
+sealevel=sealevel-g1990;
+smoothsealevel=smoothsealevel-g1990;
+
+if source == 'm' 
+   if SSA == 'y'
+      slm = ssatrend([yearm levelm],ed);
+      yym = ssatrend([yearm tempm],ed);
+   else
+      [p1 s1 m1] = polyfit(yearm,levelm,degree);
+      [slm error1] = polyval(p1,yearm,s1,m1);
+      [p2 s2 m2] = polyfit(yearm,tempm,degree);
+      [yym error1] = polyval(p2,yearm,s2,m2);
+   end
+end
+
+%----------------------------
+% compute and look at correlations
+%----------------------------
+
+% compute average rate of rise and average temperature over time intervals 
+% (i.e., bin data) 
+
+if source == 'r'
+   rateofrise=diff(smoothsealevel); % time derivative of smoothed sea level
+   rateoftemp=diff(smoothgisstemp); % time derivative of smoothed temperature
+   if bin=='5'
+      for i=dataspan
+         mtemp(i)=mean(smoothgisstemp(5*i-2:5*i+2));
+         mrtmp(i)=mean(rateoftemp(5*i-2:5*i+2));
+         mrate(i)=mean(rateofrise(5*i+7:5*i+11));
+      end
+   end
+   if bin=='10'
+      for i=dataspan
+         mtemp(i)=mean(smoothgisstemp(10*i-7:10*i+2));
+         mrtmp(i)=mean(rateoftemp(10*i-7:10*i+2));
+         mrate(i)=mean(rateofrise(10*i+2:10*i+11));
+      end
+   end
+   if bin=='15'
+      for i=dataspan
+          mtemp(i)=mean(smoothgisstemp(15*i-12:15*i+2));
+          mrtmp(i)=mean(rateoftemp(15*i-12:15*i+2));
+          mrate(i)=mean(rateofrise(15*i-3:15*i+11));
+      end
+   % add satellite data as data point 9!! Normally to be commented out!
+      %mtemp(9)=0.433;
+      %mrtmp(9)=0.022;
+      %mrate(9)=0.36;
+   end
+   if bin=='20'
+      for i=dataspan
+         mtemp(i)=mean(smoothgisstemp(15*i-12:15*i+2));
+         mrtmp(i)=mean(rateoftemp(15*i-12:15*i+2));
+         mrate(i)=mean(rateofrise(15*i-3:15*i+11));
+      end
+   end
+else
+   % use model sea level instead of church sea level in this case
+   % (in this case _always_ 5 year binning)
+   diffc=diff(slm);
+   rateofyym=diff(yym);
+   for i=dataspan    
+      mtemp(i)=mean(yym(5*i+1880-startm-4:5*i+1880-startm));
+      mrate(i)=mean(diffc(5*i+1880-startm-4:5*i+1880-startm));
+      mrtmp(i)=mean(rateofyym(5*i+1880-startm-4:5*i+1880-startm)); 
+   end
+end
+
+% loop for optimal lambda:
+rold = 0;
+[r p] = corrcoef([mtemp(dataspan)' mrate(dataspan)']);
+while r(1,2) > rold && iterate == 'y'
+  rold = r(1,2);
+  if source =='r'
+    lambda = lambda - 0.01;
+  else
+    lambda = lambda + 0.1;
+  end
+
+  % construct a linear combination of T and dT/dt (MV):
+  mtemp2 = mtemp + lambda * mrtmp;
+
+  % correlation of these binned data:
+
+  % optional detrending before fitting 
+  % (we need to keep the mean which the matlab detrend function removes)
+  if detr=='y'
+     mtemp2 = detrend(mtemp2) + mean(mtemp2);
+     mrate = detrend(mrate) + mean(mrate);
+  end
+  [r p] = corrcoef([mtemp2(dataspan)' mrate(dataspan)']);
+end
+if iterate == 'y'
+  mtemp = mtemp2;
+end
+
+disp([10, 'Pearson correlation coefficient r: ']); disp(r(1,2));  % correlation coefficient
+
+% linear fit to these data:
+[po s] = polyfit(mtemp(dataspan),mrate(dataspan),1); % s is used with "polyval" to compute error bounds
+fitrate = polyval(po,[-.48 -.25 0 .25 .5],s);
+
+slope = po(1); % this is the a parameter
+tbase = -po(2)/po(1); % this is the derived pre-industrial base temperature
+b = slope * lambda; % this is the b parameter
+
+fprintf(1, '\nT0 = %6.3f, a = %6.3f, b = %6.3f lambda = %6.3f\n', tbase, slope, b, lambda);
+
+% compute sea level hindcast from the fit found above 
+
+if source == 'r'
+   smoothXtemp = smoothgisstemp;
+   % Contains 1880-2006: 1880 => 1, 2006 => 127
+   smoothXtemp(1:126) = smoothXtemp(1:126) + lambda * rateoftemp(1:126);
+   smoothXtemp(127) = smoothXtemp(127) + lambda * rateoftemp(126); % not exact
+   [hindrate herror] = polyval(po,smoothXtemp,s); %hindcast rate of sea level rise
+else
+   yymX = yym(1880-startm+1:2100-startm+1);
+   rateofyymX = rateofyym(1880-startm+1:2100-startm);
+   % Contains now 1880-2100: 1880 => 1, 2100 => 221
+   yymX(1:220) = yymX(1:220) + lambda * rateofyymX(1:220);
+   yymX(221) = yymX(221) + lambda * rateofyymX(220); % not exact
+   [hindrate herror] = polyval(po,yymX,s); %for model, includes forecast
+end
+
+hindlevel = cumsum(hindrate); %integrate up the rate
+hindlevel = hindlevel - hindlevel(111); % normalise to 1990 value
+
+% compute sea level projections from the fit found above
+
+rateofipcc = ipcc_scenarios(:,2);
+for i = [2 3 6:11]
+   % dT/dt for 21st century (data interval 5 years!):
+   dif = diff(ipcc_scenarios(:,i)) / 5;
+   for j = 2:22
+      rateofipcc(j) = 0.5 * (dif(j-1)+dif(j));
+   end
+   rateofipcc(1) = dif(1) - 0.5*(dif(2)-dif(1));
+   rateofipcc(23) = dif(22) + 0.5*(dif(22)-dif(21));
+   %
+   % This is the aT + bdT/dt expression relative to preindustrial:
+   ipcc_scenarios(:,i) = ipcc_scenarios(:,i) + smoothgisstemp(111) + lambda * rateofipcc(:);
+     
+   [predrate perror] = polyval(po,ipcc_scenarios(:,i),s); %forecast rate of sea level rise
+   if source == 'r'
+      pred = cumsum(5*predrate); %integrate up the rate; time interval here is 5 years
+      predmax = cumsum(5*(predrate+perror));
+      predmin = cumsum(5*(predrate-perror));
+      predlevel(:,i) = pred - pred(1); % normalise for 1990
+      predlevelmax(:,i) = predmax-predmax(1);
+      predlevelmin(:,i) = predmin-predmin(1);
+      fprintf(1, '\n%6i %6.2f ', i, predlevel(23,i));
+   else
+      pred = hindlevel;
+      predmax = cumsum(hindrate+herror);
+      predmin = cumsum(hindrate-herror);
+      predlevel = pred - pred(111); % normalise for 1990
+      predlevelmax = predmax-predmax(111);
+      predlevelmin = predmin-predmin(111);
+      fprintf(1, '\n%6i %6.2f ', i, predlevel(221));
+   end
+end
+fprintf(1, '\n');
+
+
+%-----------------------
+% Prepare graphs
+%-----------------------
+ratio = [1.5 1 1]; % aspect ratio of the plots
+
+% scatter plot of actual vs modelled rate of sea level rise
+figure(1); clf; hold on; box on;
+p1=plot(mtemp,mrate*10,'or');
+set(p1,'markersize',5,'markerfacecolor','r');
+plot([-.48 -.25 0 .25 .5],fitrate*10,'--');
+ylabel('Rate of Sea Level Change (mm/year)')
+xlabel('Warming above 1951-1980 mean')
+set(gca,'FontSize',8,'plotboxaspectratio',ratio)
+set(gcf,'paperunits','centimeters','paperpos',[4 15.0 12.5 7])
+
+% plot of time series of actual and modelled rate of rise
+figure(2); clf; hold on; box on;
+
+%plot error band of modelled rate
+if source=='r' 
+
+   xh=[gissyear; flipud(gissyear)];
+   % re-smoothing to take out diff artefacts:
+   hindrate = ssatrend([[1880:2006]' hindrate],ed);
+
+   fac = 1/0.675; %convert herror to s.d.
+
+else % model
+   xh=[[1880:2100]'; flipud([1880:2100]')];
+   fac = sqrt(3)/0.675; % also 15a smoothing
+end
+
+yh=[(hindrate+fac*herror)*10; flipud((hindrate-fac*herror)*10)];
+
+
+% This is the light blue error band
+if iterate == 'y'
+  f2=fill(xh,yh,[.8 .8 1],'marker','.','markersize',0.01,'edgecolor',[.8 .8 1]);
+else
+  f2=fill(xh,yh,[.8 .8 .8],'marker','.','markersize',0.01,'edgecolor',[.8 .8 .8]);
+end
+
+if source == 'r'
+   % in case of SSAtrend smoothing, the observed rate (rateofrise) is smoothed, 
+   % since taking the derivative makes it look noisy (unlike the polynomial fit)
+
+   if SSA=='y'
+      smoothrate = ssatrend([seayear(1:131) rateofrise],ed);
+   else
+      smoothrate = rateofrise;
+   end
+
+   plot(gissyear,hindrate*10,seayear(1:131),smoothrate*10,'r');
+   axis([1880 2000 -.1 1.6]); 
+
+else  % model:
+   % Note: diff() has last element (year 2100) missing:
+   plot([1880:2100]',hindrate*10, [1880:2099]',ssatrend([[1880:2099]' diffc(1880-startm+1:2100-startm)*10],ed),'r'); 
+   axis([1880 2100 -.1 10]); 
+end
+
+ylabel('Rate of Change (mm/yr)')
+xlabel('Year')
+
+
+if source == 'r'
+   axis([1865 2010 0 4.5])
+else
+   axis([1865 2112 0 10.3])
+end
+set(gca,'FontSize',8,'plotboxaspectratio',ratio,'Position',[0.2 0.65 .6 0.3])
+set(gcf,'paperunits','centimeters','paperpos',[4 5.0 15 18])
+
+% plot time series of actual and modelled sea level
+width=.3; %linewidth
+axb=axes('Position',[.2 0.35 .6 0.3]); hold on; box on;
+
+if source == 'r'
+%   c5 = line(seayear,sealevel,'color',[.9 .6 .6],'marker','square','markerfacecolor',[.9 .6 .6],'markersize',2,'linewidth',.1);
+   c5 = line(seayear,sealevel,'color',[.9 .6 .6], 'linewidth',.1);
+   c7 = line(gissyear,hindlevel,'Color','b','LineWidth',width);
+   c6 = line(seayear,smoothsealevel,'Color','r','LineWidth',width); 
+   % Output sea level residual:
+   fid=fopen('resid.txt', 'wt');
+   for y = 1880:2000
+      resid = smoothsealevel(y-fix(seayear(1))+1)-hindlevel(y-gissyear(1)+1);
+      %%resid = smoothsealevel(y-fix(seayear(1))+1); % create sl.txt
+      fprintf(fid, '%6i %10.6f\n', y, resid);
+   end
+   fclose(fid);
+else
+   c5 = line(yearm,levelm,'color',[.9 .6 .6],'marker','square','markerfacecolor',[.9 .6 .6],'markersize',2,'linewidth',.1);
+   c7 = line([1880:2100]',hindlevel,'Color','b','LineWidth',width);
+   c6 = line(yearm,slm,'Color','r','LineWidth',width); 
+end
+
+
+xlabel('Year')
+ylabel('Sea Level (cm)')
+if source == 'r'
+   axis([1865 2010 -20 7])
+else
+   axis([1865 2112 -8 54])
+end
+set(gca,'FontSize',8,'plotboxaspectratio',ratio);
+
+if source == 'r'
+   % plot with future projections
+   figure(3); clf; hold on; box on;
+
+   %plot ipcc range as grey band
+   xs=[ipccyear; flipud(ipccyear)];
+   ys=[predlevel(:,2); flipud(predlevel(:,3))];
+   f1=fill(xs,ys,[.8 .8 .8],'marker','.','markersize',0.01,'edgecolor',[.8 .8 .8]); %IPCC band
+   plot([1000 2100],[0,0],'linewidth',.5,'color',[.5 .5 .5]);
+   plot([1990 1990],[-100,300],'linewidth',.5,'color',[.5 .5 .5]);
+
+   % plot projected sea level for ipcc marker scenarios
+   a2=plot(ipccyear,predlevel(:,9),'--');
+   a1b=plot(ipccyear,predlevel(:,7),'--');
+   b1=plot(ipccyear,predlevel(:,10),'--');
+   b2=plot(ipccyear,predlevel(:,11),'--');
+   a1fi=plot(ipccyear,predlevel(:,6),'--');
+   a1t=plot(ipccyear,predlevel(:,8),'--');
+   % max=plot(ipccyear,predlevelmax(:,2),'--');
+   % min=plot(ipccyear,predlevelmin(:,3),'--');
+
+   % add observed and hindcast sea level
+   c5 = line(seayear,sealevel,'color',[.9 .6 .6],'marker','square','markerfacecolor',[.9 .6 .6],'markersize',2,'linewidth',.1);
+   c6 = line(seayear,smoothsealevel,'Color','r','LineWidth',width); 
+   c7 = line(gissyear,hindlevel,'Color','b','LineWidth',width);
+
+   % set colors etc
+   width=0.4;
+   set(a2,'linewidth',width,'color','r')
+   set(a1b,'linewidth',width,'color',[1 0 1])
+   set(b1,'linewidth',width,'color',[1 1 0])
+   % set(max,'linewidth',width,'color',[0.5 0.5 0.5])
+   % set(min,'linewidth',width,'color',[0.5 0.5 0.5])
+   set(a1fi,'linewidth',width,'color',[0 1 1])
+   set(a1t,'linewidth',width,'color','b')
+   set(b2,'linewidth',width,'color','g')
+
+   axis([1870 2100 -20 200])
+   set(gca,'FontSize',8,'plotboxaspectratio',ratio)
+   xlabel('Year')
+   ylabel('Sea Level Change (cm)')
+   set(gcf,'paperunits','centimeters','paperpos',[4 15.0 12.5 7])
+end
