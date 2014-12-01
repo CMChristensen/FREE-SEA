@@ -1,0 +1,5107 @@
+{UTF-8}
+Average AEEI=
+	Embodied AEEI/Capital
+	~	dmnl
+	~		|
+
+Discounted Marginal Utility Init= INITIAL(
+	Discounted Marginal Utility)
+	~	utiles/$
+	~	Initial value of discounted marginal utility.
+	|
+
+LR Capital Share=
+	1-LR Energy Share
+	~	dmnl
+	~	CES value share of capital in capital-energy aggregate.
+	|
+
+LR Energy Share=
+	Average AEEI*Ref Total Expenditure/((1-Value Share of Labor)*Reference Output)
+	~	dmnl
+	~	CES value share of aggregate energy good in capital-energy aggregate.
+	|
+
+LR Marginal Prod of Eff Capital=
+	Marg Prod Oper Capital*Reference Operating Capital/Reference Capital'Energy Aggr
+	~	$/(year*Eff$)
+	~	Long run marginal productivity of capital-energy aggregate good; equals marginal \
+		productivity of operating
+		        capital multiplied by the ratio of operating to effective capital (i.e. \
+		utilization).
+		         Here the normal ratio of operating capital to the capital-energy aggregate \
+		is used, rather
+		than the actual, since in the long run utilization can be expected to be \
+		normal.
+	|
+
+Reference Capital'Energy Aggr=
+	INITIAL(Reference Capital*Reference Productivity)
+	~	Eff$
+	~	Reference output of aggregate capital-energy good. (long-run CES \
+		capital-energy aggregate).
+	|
+
+Reference Operating Capital= INITIAL(
+	Reference Operating Ratio*Reference Capital'Energy Aggr)
+	~	Op$
+	~	Reference operating capital (short run fixed capital-energy aggregate).
+	|
+
+Reference Productivity=
+	1
+	~	Eff$/$
+	~	Reference productivity of capital (normal output of capital-energy \
+		aggregate per unit of capital input).
+	|
+
+********************************************************
+	.Welfare.Constrained
+********************************************************~
+		Calculation of discounted utility, modified for inclusion of
+		a hard constraint on atmospheric CO2.
+	|
+
+Net Discounted Utility=
+	Discounted Utility-Constraint Violation Penalty
+	~	utiles/year
+	~	Discounted utility, net of cost of constraint violation.
+	~	:SUPPLEMENTARY 
+	|
+
+Constraint Violation Penalty=
+	Constraint Violation Cost*max(0,Effective CO2 in Atmosphere-CO2 Constraint)
+	~	utiles/year
+	~	Total cost of violation of CO2 constraint.
+	|
+
+CO2 Constraint= INITIAL (
+	Preindustrial CO2*CO2 Constraint Factor)
+	~	TonC
+	~	Constraint on CO2 content of atmosphere.
+	|
+
+CO2 Constraint Factor=
+	2
+	~	dmnl
+	~	CO2 constraint, expressed as a multiple of the preindustrial CO2 \
+		concentration.
+	|
+
+Constraint Violation Cost=
+	0
+	~	utiles/year/TonC
+	~	Unit cost of violating CO2 constraint. For constrained scenarios, set to a \
+		very high value in order to ensure a hard constraint.
+	|
+
+********************************************************
+	.Policy.Depletion
+********************************************************~
+		Near-optimal taxation of resource depletion in order to restore
+		intertemporal efficiency in oil and gas production. Note that this
+		structure is intended to allow testing of a 
+		scenario of efficient resource allocation, 
+		not as a plausible representation of behavior.
+	|
+
+Indicated Depletion Rent[OilGas]=
+	exp(-Depletion Planning Horizon*Interest Rate)
+	*(Target Final Rent-Marginal Resource Eff on Cost[OilGas]
+	*(exp(Interest Rate*Depletion Planning Horizon)
+	-exp(Cost Trend[OilGas]*Depletion Planning Horizon))
+	/(Interest Rate-Cost Trend[OilGas]))
+	~	$/GJ
+	~	Indicated depletion rent, based on extrapolation of current rate of 
+		resource cost increase, to adjust depletion rent to target level at
+		end of planning horizon.
+	|
+
+Depletion Rent[nonrenewable]=
+	Frac Depletion Recovered*max(0,Desired Depletion Rent[nonrenewable])
+	~	$/GJ
+	~	Energy tax for depletion.
+	|
+
+Initial Cost Trend=
+	0.04
+	~	1/year
+	~	Initial trend in resource extraction cost.
+	|
+
+Depletion Rent Correction[OilGas]=
+	(1-Exog Energy Price Switch[OilGas])
+	*(Indicated Depletion Rent[OilGas]-Desired Depletion Rent[OilGas])/Time to Correct Rent
+	~	$/GJ/year
+	~	Correction to depletion rent; applied over the Time to Correct Rent, but
+		active only while energy prices are endogenous.
+	|
+
+Cost Trend[OilGas]=
+	LN(Marginal Resource Eff on Cost[OilGas]
+	/SMOOTHI(Marginal Resource Eff on Cost[OilGas],Trend Time,
+	Marginal Resource Eff on Cost[OilGas]
+	*exp(-Trend Time*Initial Cost Trend)))/Trend Time
+	~	1/year
+	~	Fractional rate of change of the marginal effect of resource
+		availability on extraction costs.
+	|
+
+Depletion Planning Horizon=
+	FINAL TIME-Time
+	~	year
+	~	Planning horizon for depletion decision.
+	|
+
+Trend Time=
+	20
+	~	year
+	~	Time to establish trend in extraction costs.
+	|
+
+Target Final Rent=
+	0
+	~	$/GJ
+	~	Target depletion rent at final time.
+	|
+
+Time to Correct Rent=
+	20
+	~	year
+	~	Time to make extrapolative corrections to depletion rent.
+	|
+
+Chg Depletion Rent[OilGas]=
+	Desired Depletion Rent[OilGas]*Interest Rate
+	+Marginal Resource Eff on Cost[OilGas]+Depletion Rent Correction[OilGas]
+	~	$/GJ/year
+	~	Rate of change of depletion rent.
+	|
+
+Final Depletion Rent=
+	IF THEN ELSE(Time = FINAL TIME,ABS(Desired Depletion Rent[OilGas]),0)
+	~	$/GJ
+	~	Depletion rent in final time step (for calibration purposes)
+	~	:SUPPLEMENTARY 
+	|
+
+LR Marginal Cost of Energy Prod[OilGas]=
+	(Energy Capital[OilGas]*Energy Capital Cost[OilGas]+Normal Variable Cost[OilGas])
+	/Normal Effective Energy Capital Ratio[OilGas]
+	~	$/year
+	~	Long run marginal cost of energy production.
+	|
+
+Marginal Resource Eff Energy Capital Ratio[OilGas]=
+	(((Scheduled Production[OilGas]/Initial Production[OilGas])
+	^Saturation Coeff[OilGas]-Resource Share[OilGas]*Resource Ratio[OilGas]
+	^Saturation Coeff[OilGas])/(1-Resource Share[OilGas]))
+	^(1/Saturation Coeff[OilGas]-1)
+	*Resource Ratio[OilGas]
+	^(Saturation Coeff[OilGas]-1)
+	*(-Resource Share[OilGas])/(1-Resource Share[OilGas])
+	/Init Resource Remaining[OilGas]
+	~	1/GJ
+	~	Marginal increase in capital-variable aggregate per unit increase in \
+		production.
+	|
+
+Marginal Resource Eff on Cost[OilGas]=
+	LR Marginal Cost of Energy Prod[OilGas]*Marginal Resource Eff Energy Capital Ratio[OilGas
+]
+	~	$/GJ/year
+	~	Marginal effect of resource depletion on extraction cost.
+	|
+
+Initial Depletion Tax[OilGas]=
+	0.3
+	~	$/GJ
+	~	Initial depletion rent
+	|
+
+Desired Depletion Rent[OilGas]= INTEG (
+	Chg Depletion Rent[OilGas],
+		Initial Depletion Tax[OilGas]) ~~|
+Desired Depletion Rent[Coal]=
+	0
+	~	$/GJ
+	~	Desired depletion rent.
+	|
+
+Frac Depletion Recovered=
+	 0
+	~	dmnl
+	~	Fraction of desired depletion rent actually collected by resource managers.
+	|
+
+********************************************************
+	.Economy.Retrofit
+********************************************************~
+	|
+
+Energy Req Retrofit Rate[source]=
+	Capital*Retrofit Rate*Planned Energy Intensity[source]-Energy Requirement[source]*Retrofit Rate
+	~	GJ/year/year
+	~	Rate of change of embodied energy requirements due to retrofits on \
+		existing capital.
+	|
+
+Retrofit Rate=
+	0
+	~	1/year
+	~	Fractional rate of retrofit to existing capital.
+	|
+
+********************************************************
+	.Economy.EnergyInput
+********************************************************~
+	|
+
+SR Marg Prod Aggr Energy=
+	Marg Prod Oper Capital*Normal Capital'Energy Aggr/Normal Aggr Energy Requirement
+	*SR Aggr Energy Value Share*Operating Coeff^(1/SR Elast Coeff-1)
+	*(SR Aggr Energy/Normal Aggr Energy Requirement)^(SR Elast Coeff-1)
+	*Reference Operating Capital/Reference Capital'Energy Aggr
+	~	$/GJequiv
+	~	Short run marginal productivity of aggregate energy good.
+	|
+
+Energy Order Adj Coeff=
+	0.1
+	~	dmnl
+	~	Coefficient of energy input adjustment in response to price/productivity
+		imbalance. Really a behavioral parameter, but should be roughly equal to \
+		the short run own-price elasticity if agents know the slope of the short \
+		run production function.
+	|
+
+Indicated Energy Order Rate[source]=
+	Energy Delivery[source]
+	*(SR Marg Prod Energy[source]/SR Expected Energy Price[source])^Energy Order Adj Coeff
+	~	GJ/year
+	~	Decision makers anchor on current energy consumption rate 
+		    and adjust for relative price and marginal productivity.
+		    There is a very small error in energy ordering, as there is no
+		    trend extrapolation to compensate for the delivery delay.
+	|
+
+SR Marg Aggr Energy per Energy[source]=
+	 Normal Aggr Energy Requirement/Energy Requirement[source]
+	*SR Total Aggr Energy Input^(1/SR Energy Subst Coeff-1)
+	*(Energy Delivery[source]/Energy Requirement[source])
+	^(SR Energy Subst Coeff-1)*SR Energy Value Share[source]
+	~	GJequiv/GJ
+	~	Marginal output of the aggregate energy good per unit of physical energy \
+		input.
+	|
+
+SR Aggr Energy = Normal Aggr Energy Requirement*SR Total Aggr Energy Input^(1/SR Energy Subst Coeff
+)
+	~	GJequiv/year
+	~	Output of the aggregate energy good.
+	|
+
+SR Total Aggr Energy Input = SUM(SR Aggr Energy Input[source!])
+	~	dmnl
+	~	Total contribution of CES terms for each energy source.
+	|
+
+SR Aggr Energy Input[source] = SR Energy Value Share[source]*
+	(Energy Delivery[source]/Energy Requirement[source])^SR Energy Subst Coeff
+	~	dmnl
+	~	CES term for contribution of individual energy source to aggregate energy \
+		good.
+	|
+
+SR Marg Prod Energy[source] = SR Marg Aggr Energy per Energy[source]*SR Marg Prod Aggr Energy
+	~	$/GJ
+	~	Short run marginal productivity of energy, by source.
+	|
+
+Operating Coeff=
+	 (1-SR Aggr Energy Value Share) + SR Aggr Energy Value Share*(SR Aggr Energy
+	/Normal Aggr Energy Requirement)^SR Elast Coeff
+	~	dmnl
+	~	Coefficient of energy production capacity utilization, based on energy \
+		input relative to energy requirements.
+	|
+
+SR Aggr Energy Value Share = Marg Capital'Energy per Aggr Energy*Normal Aggr Energy Requirement
+/Normal Capital'Energy Aggr
+	~	dmnl
+	~	Value share of each energy source in the short run CES aggregate energy \
+		good.
+	|
+
+SR Elast Coeff = INITIAL((SR Elasticity-1)/SR Elasticity)
+	~	dmnl
+	~	Short run CES coefficient of substitution between fixed capital and \
+		aggregate energy good.
+	|
+
+SR Energy Subst Coeff = INITIAL((SR Energy Subst Elast-1)/SR Energy Subst Elast)
+	~	dmnl
+	~	CES coefficient of subsitution among energy sources.
+	|
+
+SR Energy Subst Elast=
+	 0.2
+	~	dmnl
+	~	CES elasticity of substitution among energy sources.
+	|
+
+********************************************************
+	.Energy.Indicators
+********************************************************~
+	|
+
+Total Energy Cost=
+	Indicated Total Cost Energy Production*Fraction of Energy Goods Avail
+	+Energy Invest Req*Fraction of Invest Goods Avail
+	~	$/year
+	~	Total outlays for variable costs of energy production and investment in \
+		energy capital.
+	~	:SUPPLEMENTARY 
+	|
+
+Avg Energy Price = Total Energy Expenditure/Total Energy Production
+	~	$/GJ
+	~	Average energy price, weighted by physical energy production rates.
+	~	:SUPPLEMENTARY 
+	|
+
+Total Energy Expenditure = SUM(Source Expenditure[source!])
+	~	$/year
+	~	Total expenditure on energy, calculated in monetary terms (price x \
+		quantity).
+	|
+
+Primary Energy Order Rate = SUM(Energy Order Rate[source!])
+	~	GJ/year
+	~	Order rate of primary energy in physical terms.
+	~	:SUPPLEMENTARY 
+	|
+
+Availability[source] = Energy Production[source]/Energy Order Rate[source]
+	~	dmnl
+	~	Relative availability of energy sources, expressed as a fraction of orders.
+	~	:SUPPLEMENTARY 
+	|
+
+Production Share[source] = Energy Production[source]/Total Energy Production
+	~	dmnl
+	~	Share of energy sources in total production (in physical terms).
+	~	:SUPPLEMENTARY 
+	|
+
+Total Energy Investment = SUM(Energy Capital Completion Rate[source!])
+	~	$/year
+	~	Total investment in all energy producing capital.
+	|
+
+Total Energy Capital = SUM(Energy Capital[source!])
+	~	$
+	~	Total energy capital for all sources.
+	|
+
+********************************************************
+	.Economy.Indicators
+********************************************************~
+	|
+
+Total Capital = Capital+Total Energy Capital
+	~	$
+	~	Total capital in all sectors.
+	~	:SUPPLEMENTARY 
+	|
+
+Total Investment=
+	 Investment Rate+Total Energy Investment
+	~	$/year
+	~	Investment in all sectors.
+	|
+
+Growth Trend Time=
+	1
+	~	year
+	~	Time for measuring consumption and output growth trends.
+	|
+
+Consumption Growth Rate=
+	TREND(Consumption,Growth Trend Time,Hist Output Growth Rate)
+	~	1/year
+	~	Fractional rate of change of consumption.
+	~	:SUPPLEMENTARY 
+	|
+
+Output Growth Rate=
+	TREND(Gross Output,Growth Trend Time,Hist Output Growth Rate)
+	~	1/year
+	~	Fractional rate of change of gross output.
+	~	:SUPPLEMENTARY 
+	|
+
+Savings Rate = Total Investment/Gross Output
+	~	dmnl
+	~	Fraction of output invested.
+	~	:SUPPLEMENTARY 
+	|
+
+********************************************************
+	.Welfare
+********************************************************~
+	|
+
+Log Discounted Marginal Utility=
+	LN(Discounted Marginal Utility/Discounted Marginal Utility Init)
+	~	dmnl
+	~	Logarithm of discounted marginal utility (relative to initial value).
+	~	:SUPPLEMENTARY 
+	|
+
+Marginal Util Equiv Cons=
+	Ref Utility*(Equiv Consumption Index)^(-Rate of Inequal Aversion)
+	~	utiles/person/year
+	~	Marginal utility per unit change in equivalent consumption index.
+	|
+
+Marginal Utility=
+	 Marginal Equiv Consumption*Marginal Util Equiv Cons
+	~	utiles/$
+	~	Marginal utility of a unit of consumption.
+	|
+
+Equiv Consumption Index=
+	(Consumption per Cap/Ref Cons per Cap)^Share of Consumption
+	*(Environmental Services per Cap/Ref Envir Services per Cap)^(1-Share of Consumption
+)
+	~	dmnl
+	~	Index of equivalent consumption; equals the consumption equivalent of tangible goods
+		(consumption) and intangibles (environmental services). Assumes unit elasticity of
+		substitution between tangibles and intangibles.
+	|
+
+Ref Envir Services per Cap=
+	1
+	~	dmnl
+	~	Reference level of environmental services per capita.
+	|
+
+Marginal Equiv Consumption=
+	Share of Consumption*Equiv Consumption Index/Consumption per Cap
+	~	person*year/$
+	~	Marginal change in equivalent consumption index per unit change in \
+		consumption per capita.
+	|
+
+Share of Consumption=
+	1
+	~	dmnl
+	~	Value share of consumption in equivalent consumption index. 
+		The default value of 1 means intangible (environmental) services have zero \
+		importance.
+	|
+
+Environmental Services per Cap=
+	Ref Envir Services per Cap*Climate Damage Effect[Intangible]
+	~	dmnl
+	~	Level of environmental services per capita. Note that the environment is assumed to \
+		provide
+		the same level of services per capita regardless of the population. Thus there are \
+		no crowding
+		or degradation effects (other than climate change damages).
+	|
+
+Utility=
+	 Ref Utility*
+	IF THEN ELSE(Rate of Inequal Aversion=1,
+	LN(Equiv Consumption Index),
+	(Equiv Consumption Index^(1-Rate of Inequal Aversion)-1)
+	/(1-Rate of Inequal Aversion))
+	~	utiles/person/year
+	~	Utility of a representative individual.
+		Reduces to logarithmic utility function:
+		LN(Consumption_per_Cap)
+		when the Rate of Inequality Aversion -> 1
+	|
+
+Total Utility=
+	Population*Utility
+	~	utiles/year
+	~	Flow of utility, weighted by population; i.e. total utility of all \
+		individuals.
+	|
+
+Discounted Marginal Utility=
+	Marginal Utility*Discount Factor
+	~	utiles/$
+	~	Marginal utility of consumption, discounted to the base year.
+	|
+
+Discounted Utility=
+	Total Utility*Discount Factor
+	~	utiles/year
+	~	The flow of utility, discounted to the base year.
+	|
+
+Ref Cons per Cap = 1502
+	~	$/person/year
+	~	Reference rate of consumption per capita.
+	|
+
+Base Year = 1990
+	~	year
+	~	Base Year for Discounting
+		Model is denominated in 1990 dollars, and discounting is performed \
+		relative to 1990.
+	|
+
+Consumption per Cap = Consumption/Population
+	~	$/person/year
+	~	Per capita goods consumption.
+	|
+
+Cum Disc Utility = INTEG(Discounted Utility, 0)
+	~	utiles
+	~	Cumulative Discounted Utility
+	~	:SUPPLEMENTARY 
+	|
+
+Discount Factor = exp(-Rate of Time Pref*(Time-Base Year))
+	~	dmnl
+	~	Discount applied to utility from pure time preference (impatience).
+	|
+
+Rate of Inequal Aversion=
+	 2.5
+	~	dmnl
+	~	Rate of Inequality Aversion in utility calculation.
+	|
+
+Rate of Time Pref=
+	 0
+	~	1/year
+	~	Pure Rate of Social Time Preference in utility calculation.
+	|
+
+Ref Utility = 1
+	~	utiles/person/year
+	~	Reference Rate of Utility Generation.
+	|
+
+********************************************************
+	.Impact
+********************************************************~
+		Impacts are drawn from Nordhaus' DICE model, with a modification for intangibles
+		in the spirit of Tol. See: Nordhaus, W. D. 1994. Managing the Global Commons. \
+		Cambridge, MA: MIT Press.
+		Tol, R. S. J. 1994. The Damage Costs of Climate Change: a Note on \
+		Tangibles and Intangibles, Applied to DICE. Energy Policy 22(5): 436-438.
+	|
+
+Consumption Equiv Loss=
+	Consumption*(Climate Damage Effect[Intangible]
+	^((Share of Consumption-1)/Share of Consumption)-1)
+	~	$/year
+	~	Intangible climate damages, expressed as their consumption equivalent
+		(i.e. the additional consumption needed to produce equal welfare).
+	~	:SUPPLEMENTARY 
+	|
+
+Adaptation Rate[Damage]=
+	(Atmos UOcean Temp-Adapted Temperature[Damage])*Fractional Adaptation Rate[Damage]
+	~	DegreesC/year
+	~	Rate of adaptation to altered climatic conditions.
+	|
+
+Adapted Temperature[Damage]= INTEG (
+	Adaptation Rate[Damage],
+		0)
+	~	DegreesC
+	~	Temperature to which the economy or biosphere is adapted.
+	|
+
+Climate Damage Effect[Damage]=
+	1/(1+Climate Damage Scale[Damage]
+	*((Atmos UOcean Temp-Adapted Temperature[Damage])/Reference Temperature)
+	^Climate Damage Nonlinearity[Damage])
+	~	dmnl
+	~	Multiplier for climate damage effect on output (tangible) or environmental \
+		services (intangible).
+	|
+
+Fractional Adaptation Rate[Damage]=
+	0
+	~	1/year
+	~	Fractional rate of adaptation to altered climatic conditions;
+		inverse of the time constant for adaptation. 0 implies that
+		damages depend on the absolute temperature deviation from
+		preindustrial levels.
+	|
+
+Output Loss=
+	Gross Output*(1-Climate Damage Effect[Tangible])/Climate Damage Effect[Tangible]
+	~	$/year
+	~	Tangible climate damages, expressed as their output equivalent
+		(i.e. the additional output that could be produced with no climate \
+		effects).
+	~	:SUPPLEMENTARY 
+	|
+
+Climate Damage Nonlinearity[Damage]=
+	 2
+	~	dmnl
+	~	Nonlinearity of Climate Damage Cost Fraction.
+	|
+
+Climate Damage Scale[Damage]=
+	 0.013
+	~	dmnl
+	~	Climate damage scale, expressed as the fractional loss at the reference \
+		temperature deviation.
+	|
+
+Reference Temperature = 3
+	~	DegreesC
+	~	Reference temperature deviation (from adapted level) for calculation of \
+		climate damages.
+	|
+
+********************************************************
+	.Economy.AEEI
+********************************************************~
+	|
+
+AEEI Retrofit Rate=
+	Capital*Retrofit Rate*Auton Energy Eff Index-Embodied AEEI*Retrofit Rate
+	~	$/year
+	~	Rate of change of embodied energy efficiency technology due to retrofits.
+	|
+
+Embodied AEEI= INTEG (
+	AEEI Install Rate+AEEI Retrofit Rate-AEEI Discard Rate,
+		Auton Energy Eff Index*Capital)
+	~	$
+	~	Autonomous energy efficiency improvements embodied in capital.
+	|
+
+Asymptotic AEEI=
+	0.1
+	~	dmnl
+	~	Ultimate possible energy efficiency improvement level.
+	|
+
+Auton Energy Eff Improvement=
+	 (Auton Energy Eff Index-Asymptotic AEEI)*Frac Auton Energy Eff Improvement Rate
+	~	1/year
+	~	Rate of autonomous energy efficiency improvement of new capital.
+	|
+
+AEEI Discard Rate=
+	 Embodied AEEI/Capital Lifetime
+	~	$/year
+	~	Embodied energy efficiency technology of discarded capital.
+	|
+
+AEEI Install Rate=
+	 Investment Rate*Auton Energy Eff Index
+	~	$/year
+	~	Rate of embodiment of autonomous energy efficiency technology from \
+		investment in new capital.
+	|
+
+Auton Energy Eff Index = INTEG(-Auton Energy Eff Improvement,1)
+	~	dmnl
+	~	Index of autonomous energy efficiency technology for new capital.
+	|
+
+Capital Lifetime = 15
+	~	year
+	~	Lifetime of goods producing capital.
+	|
+
+Frac Auton Energy Eff Improvement Rate=
+	 0.005
+	~	1/year
+	~	Fractional autonomous energy efficiency improvement rate.
+	|
+
+********************************************************
+	.Economy.EnergyRequirement
+********************************************************~
+	|
+
+Total Energy Intensity = Total Energy Requirement/Capital
+	~	GJ/year/$
+	~	Total energy intensity of capital (in physical terms).
+	|
+
+LR Marginal Productivity of Aggr Energy=
+	LR Marginal Prod of Eff Capital*Marg Capital'Energy per Aggr Energy
+	~	$/GJequiv
+	~	Long-run marginal productivity of aggregate energy good in capital-energy \
+		aggregate.
+	|
+
+Energy Intensity of Capital[source] = Energy Requirement[source]/Capital
+	~	GJ/year/$
+	~	Energy intensity of capital, by source.
+	|
+
+Energy Intensity Adjustment Time=
+	 4
+	~	year
+	~	Time required (for R&D, retooling, etc.) to adjust energy intensity of new \
+		capital
+	|
+
+Initial Energy Requirement[source] = 5.67e+10,6.28e+10,6.4e+09,2.36e+07
+	~	GJ/year
+	~	Initial embodied energy requirements, by source. Oil, Gas: \
+		4.53e+010,1.75e+010
+	|
+
+Normal Energy Expenditure[source]=
+	LR Expected Energy Price[source]*Energy Requirement[source]
+	~	$/year
+	~	Expected expenditures for energy, by source, with normal capacity \
+		utilization.
+	|
+
+Aggr Energy Intensity Effect=
+	(LR Marginal Productivity of Aggr Energy/Normal Aggr Energy Price)^Aggr Intensity Adj Coeff
+	~	dmnl
+	~	Effect of aggregate energy intensity on desired energy intensity of new \
+		capital.
+	|
+
+Desired Energy Intensity[source]=
+	Total Energy Intensity*Aggr Energy Intensity Effect*Desired Share[source]
+	~	GJ/(year*$)
+	~	Desired intensity of energy use for new capital, by source. Reflects rebalancing of 
+		aggregate energy intensity and fuel switching.
+	|
+
+Desired Share[source]=
+	Adj Energy Intensity[source]/Total Adj Energy Intensity
+	~	dmnl
+	~	Desired share of energy sources in total energy intensity of capital.
+	|
+
+Planned Energy Intensity[source]=
+	SMOOTH(Desired Energy Intensity[source],Energy Intensity Adjustment Time)
+	~	GJ/(year*$)
+	~	Energy intensity of new capital; lags desired energy intensity due to lead time \
+		needed for R&D,
+		retooling, etc.
+	|
+
+Total Normal Energy Expenditure=
+	SUM(Normal Energy Expenditure[source!])
+	~	$/year
+	~	Total expected energy expenditures, with normal capacity utilization.
+	|
+
+Total Adj Energy Intensity=
+	SUM(Adj Energy Intensity[source!])
+	~	GJ/year/$
+	~	Sum of adjusted energy intensities for individual sources.
+	|
+
+Normal Aggr Energy Price=
+	Total Normal Energy Expenditure/Normal Aggr Energy Requirement
+	~	$/GJequiv
+	~	Expected price of aggregate energy good, with normal capacity utilization.
+	|
+
+Energy Req Install Rate[source]=
+	 Planned Energy Intensity[source]*Investment Rate
+	~	GJ/year/year
+	~	Energy requirements of installed capital. Co-flow with investment.
+	|
+
+Energy Req Discard Rate[source]=
+	 Energy Requirement[source]/Capital Lifetime
+	~	GJ/year/year
+	~	Energy requirements of discarded capital. Co-flow with capital discards.
+	|
+
+Energy Requirement[source]= INTEG (
+	Energy Req Install Rate[source]+Energy Req Retrofit Rate[source]-Energy Req Discard Rate
+	[source],
+		Initial Energy Requirement[source])
+	~	GJ/year
+	~	Energy requirements embodied in capital stock.
+	|
+
+Aggr Energy Input[source] = Ref Energy Value Share[source]
+*(Energy Requirement[source]/Reference Production[source])^Energy Subst Coeff
+	~	dmnl
+	~	CES term for contribution of energy sources to aggregate energy good.
+	|
+
+Normal Aggr Energy Requirement = Ref Aggr Energy Production*Total Aggr Energy Input
+^(1/Energy Subst Coeff)
+	~	GJequiv/year
+	~	Input of aggregate energy good, with normal capacity utilization.
+	|
+
+Marginal Aggr Energy per Energy[source] = Ref Aggr Energy Production/Reference Production
+[source]
+*Total Aggr Energy Input^(1/Energy Subst Coeff-1)
+*(Energy Requirement[source]/Reference Production[source])^(Energy Subst Coeff-1)
+*Ref Energy Value Share[source]
+	~	GJequiv/GJ
+	~	Marginal output of aggregate energy good per unit of physical energy input.
+	|
+
+Total Aggr Energy Input = SUM(Aggr Energy Input[source!])
+	~	dmnl
+	~	Sum of CES terms for contribution of energy sources to aggregate energy \
+		good.
+	|
+
+Energy Adj Coeff=
+	0.33
+	~	dmnl
+	~	Ratio of actual adjustment in energy intensity to optimal adjustment. If value is 1,
+		agents know the local slope of the long-run capital-energy and inter-energy \
+		production functions,
+		and adjust desired energy intensities fully and immediately. If value is less than 1,
+		adjustment is only partial, for behavioral or structural reasons.
+	|
+
+Aggr Intensity Adj Coeff= INITIAL (Capital Energy Subst Elast*Energy Adj Coeff)
+	~	dmnl
+	~	Coefficient of adjustment of aggregate energy intensity.
+	|
+
+Energy Intensity Adj Coeff= INITIAL (
+	 Energy Subst Elast*Energy Adj Coeff)
+	~	dmnl
+	~	Coefficient of adjustment of fuel shares.
+	|
+
+Adj Energy Intensity[source] = Energy Intensity of Capital[source]
+*(LR Marginal Prod of Energy[source]/LR Expected Energy Price[source])^Energy Intensity Adj Coeff
+	~	GJ/year/$
+	~	Desired energy intensity of new capital for fuel switching. Adjusted from \
+		current energy intensity of new capital according to perceived \
+		price/productivity gradient.
+	|
+
+Total Energy Requirement = SUM(Energy Requirement[source!])
+	~	GJ/year
+	~	Total energy requirements embodied in capital (in physical terms).
+	|
+
+LR Marginal Prod of Energy[source] = LR Marginal Productivity of Aggr Energy
+*Marginal Aggr Energy per Energy[source]
+	~	$/GJ
+	~	Long-run marginal productivity of energy, by source.
+	|
+
+Reference Capital = 1.22e+13
+	~	$
+	~	Reference capital stock, assuming 15 year lifetime.
+		Alternate value: 1.5e13 with capital lifetime of 20 years
+	|
+
+Capital Energy Subst Coeff = INITIAL((Capital Energy Subst Elast-1)/Capital Energy Subst Elast
+)
+	~	dmnl
+	~	CES coefficient of substitution in capital-energy aggregate.
+	|
+
+Capital Energy Subst Elast = 0.75
+	~	dmnl
+	~	Elasticity of substitution between capital and aggregate energy good in \
+		capital-energy aggregate.
+	|
+
+Energy Subst Coeff = INITIAL((Energy Subst Elast-1)/Energy Subst Elast)
+	~	dmnl
+	~	Long-run CES coefficient of subsitution among energy sources.
+	|
+
+Energy Subst Elast=
+	 2
+	~	dmnl
+	~	Long-run CES elasticity of substitution among energy sources.
+	|
+
+Reference Production[source] = 5.67e+10,6.28e+10,6.4e+09,2.36e+07
+	~	GJ/year
+	~	Reference production of energy by source. Oil, gas: 4.53e+010,1.75e+010
+	|
+
+********************************************************
+	.Economy.Allocation
+********************************************************~
+		Allocation of goods among climate impacts, energy production, investment, and \
+		consumption.
+		Taxes do not appear here, as revenues are assumed to be recycled.
+	|
+
+Total Invest Req=
+	 Desired Investment+Energy Invest Req
+	~	$/year
+	~	Total investment required for goods and energy producing sectors.
+	|
+
+Consumption = max(0,Output Net of Energy-Total Invest Req)
+	~	$/year
+	~	Goods consumption.
+	|
+
+Output Net of Energy = max(0,Gross Output-Indicated Total Cost Energy Production
+)
+	~	$/year
+	~	Goods production less climate damages and energy production/distribution expenses. \
+		Available for
+		         consumption and investment.
+	|
+
+Energy Invest Req = SUM(Indicated Energy Capital Completion Rate[source!])
+	~	$/year
+	~	Total goods required for energy investment.
+	|
+
+Indicated Total Energy Dist Cost = SUM(Indicated Energy Distribution Cost[source!])
+	~	$/year
+	~	Total goods required for energy distribution.
+	|
+
+Indicated Energy Distribution Cost[source] = Init Unit Distribution Cost[source]*Scheduled Production
+[source
+]
+	~	$/year
+	~	Goods required for energy distribution, by source.
+	|
+
+Fraction of Energy Goods Avail = MIN(1,Gross Output/Indicated Total Cost Energy Production
+)
+	~	dmnl
+	~	Availability of goods for energy sector investment and production.
+	|
+
+Fraction of Invest Goods Avail = MIN(1,Output Net of Energy/Total Invest Req)
+	~	dmnl
+	~	Fraction of desired investment goods available.
+	|
+
+Indicated Total Energy Variable Cost = SUM(Desired Variable Input[source!])
+	~	$/year
+	~	Total goods required for variable costs of energy production.
+	|
+
+Indicated Total Cost Energy Production = Indicated Total Energy Dist Cost+Indicated Total Energy Variable Cost
+	~	$/year
+	~	Total goods required for energy production and distribution.
+	|
+
+********************************************************
+	.Carbon.Control
+********************************************************~
+	|
+
+Effective CO2 in Atmosphere=
+	 IF THEN ELSE(Carbon Cycle Switch=0,
+	CO2 in Atmos,CO2 in Atmosphere)
+	~	TonC
+	~	Switches between simple (DICE) and complex carbon cycles.
+	|
+
+Carbon Cycle Switch=
+	 1
+	~	dmnl
+	~	0 = simple (Nordhaus' DICE), 1 = complex.
+	|
+
+********************************************************
+	.Carbon.FREE
+********************************************************~
+	|
+
+Init CO2 in Biomass=
+	6.566e+11
+	~	TonC
+	~	Initial carbon in biomass. From simulations with historical emissions, \
+		starting at equilibrium in 1775.
+	|
+
+Init CO2 in Deep Ocean[layers]=
+	2.054e+12,2.051e+12,2.05e+12,2.049e+12,2.048e+12,5.734e+12,5.733e+12,5.733e+12
+,5.733e+12,5.733e+12
+	~	TonC
+	~	Initial carbon in deep ocean layers. From simulations with historical \
+		emissions, starting at equilibrium in 1775.
+	|
+
+Init CO2 in Humus=
+	7.259e+11
+	~	TonC
+	~	Inital carbon in humus. From simulations with historical emissions, \
+		starting at equilibrium in 1775.
+	|
+
+Init CO2 in Mixed Ocean=
+	7.712e+11
+	~	TonC
+	~	Initial carbon in mixed ocean layer. From simulations with historical \
+		emissions, starting at equilibrium in 1775.
+	|
+
+init co2 in atm=
+	 6.576e+11
+	~	TonC
+	~	Initial carbon in atmosphere. From simulations with historical emissions, \
+		starting at equilibrium in 1775.
+	|
+
+CO2 in Deep Ocean[upper]= INTEG (
+	Diffusion Flux[upper]-Diffusion Flux[lower],
+		Init CO2 in Deep Ocean
+		[upper]) ~~|
+CO2 in Deep Ocean[layer10] = INTEG(Diffusion Flux[layer10],Init CO2 in Deep Ocean
+[layer10])
+	~	TonC
+	~	Carbon in deep ocean.
+	|
+
+Atmospheric Retention=
+	 ZIDZ(Total Carbon Emissions-Flux Atm to Ocean-Flux Atm to Biomass+Flux Biomass to Atmosphere
++Flux Humus to Atmosphere
+	,Total Carbon Emissions
+	)
+	~	dmnl
+	~	Atmospheric retention of emissions.
+	~	:SUPPLEMENTARY 
+	|
+
+Flux Humus to Atmosphere=
+	CO2 in Humus/Humus Res Time
+	~	TonC/year
+	~	Carbon flux from humus to atmosphere.
+	|
+
+Biomass Res Time=
+	 10.6
+	~	year
+	~	Average residence time of carbon in biomass.
+	|
+
+Biostim Coeff=
+	 0.4
+	~	dmnl
+	~	Coefficient for response of primary production to CO2 concentration.
+	|
+
+Buff CO2 Coeff = 4.05
+	~	dmnl
+	~	Coefficient of CO2 concentration influence on buffer factor.
+	|
+
+Buffer Factor=
+	 Ref Buffer Factor + Buff CO2 Coeff*LN(CO2 in Atmosphere/Ref Buff CO2)
+	~	dmnl
+	~	Buffer factor for atmosphere/mixed ocean carbon equilibration.
+	|
+
+CO2 in Atmosphere= INTEG (
+	Total Carbon Emissions-Flux Atm to Ocean-Flux Atm to Biomass+Flux Biomass to Atmosphere
+	+Flux Humus to Atmosphere,
+		init co2 in atm)
+	~	TonC
+	~	Carbon in atmosphere
+	|
+
+CO2 in Biomass= INTEG (
+	Flux Atm to Biomass-Flux Biomass to Atmosphere-Flux Biomass to Humus,
+		Init CO2 in Biomass)
+	~	TonC
+	~	Carbon in biosphere (biomass, litter, and humus)
+	|
+
+CO2 in Humus= INTEG (
+	Flux Biomass to Humus-Flux Humus to Atmosphere,
+		Init CO2 in Humus)
+	~	TonC
+	~	Carbon in humus.
+	|
+
+CO2 in Mixed Layer= INTEG (
+	Flux Atm to Ocean-Diffusion Flux[layer1],
+		Init CO2 in Mixed Ocean)
+	~	TonC
+	~	Carbon in mixed layer.
+	|
+
+Concentration[layers] = CO2 in Deep Ocean[layers]/Thickness[layers]
+	~	TonC/meter
+	~	Concentration of carbon in ocean layers.
+	|
+
+Mixing Time=
+	1.5
+	~	year
+	~	Atmosphere - mixed ocean layer mixing time.
+	|
+
+Diffusion Flux[layer1] = (CO2 in Mixed Layer/Mixed Depth-Concentration[layer1
+])*Eddy Diff Coeff
+*2/(Mixed Depth+Thickness[layer1]) ~~|
+Diffusion Flux[lower] = (Concentration[upper]-Concentration[lower])*Eddy Diff Coeff
+*2/(Thickness
+[upper]+Thickness[lower])
+	~	TonC/year
+	~	Diffusion flux between ocean layers.
+	|
+
+Eddy Diff Coeff = 4000
+	~	meter*meter/year
+	~	Eddy diffusion coefficient.
+	|
+
+Humus Res Time=
+	27.8
+	~	year
+	~	Average carbon residence time in humus.
+	|
+
+Flux Biomass to Humus=
+	CO2 in Biomass/Biomass Res Time*Humification Fraction
+	~	TonC/year
+	~	Carbon flux from biomass to humus.
+	|
+
+Equil CO2 in Mixed Layer=
+	 Preind CO2 in Mixed Layer * (CO2 in Atmosphere/Preindustrial CO2)
+	^(1/Buffer Factor)
+	~	TonC
+	~	Equilibrium carbon content of mixed layer.
+	|
+
+Flux Atm to Biomass=
+	 Init NPP*(1+Biostim Coeff*LN(CO2 in Atmosphere/Preindustrial CO2))
+	~	TonC/year
+	~	Carbon flux from atmosphere to biosphere (from primary production)
+	|
+
+Flux Atm to Ocean = (Equil CO2 in Mixed Layer-CO2 in Mixed Layer)/Mixing Time
+	~	TonC/year
+	~	Carbon flux from atmosphere to mixed ocean layer.
+	|
+
+Flux Biomass to Atmosphere=
+	CO2 in Biomass/Biomass Res Time*(1-Humification Fraction)
+	~	TonC/year
+	~	Carbon flux from biomass to atmosphere.
+	|
+
+Mixed Depth = 75
+	~	meter
+	~	Mixed ocean layer depth.
+	|
+
+Humification Fraction=
+	0.428
+	~	dmnl
+	~	Fraction of carbon outflow from biomass that enters humus stock.
+	|
+
+Ref Buffer Factor = 10
+	~	dmnl
+	~	Normal buffer factor.
+	|
+
+Thickness[top5] = 200 ~~|
+Thickness[bottom5] = 560
+	~	meter
+	~	Deep ocean layer thicknesses.
+	|
+
+Preind CO2 in Mixed Layer=
+	 7.678e+11
+	~	TonC
+	~	Initial carbon content of mixed ocean layer.
+	|
+
+Init NPP = 6e+10
+	~	TonC/year
+	~	Initial net primary production.
+	|
+
+Ref Buff CO2 = 7.6e+11
+	~	TonC
+	~	CO2 in atmosphere at normal buffer factor.
+	|
+
+********************************************************
+	.Carbon.Nordhaus
+********************************************************~
+		Drawn exactly from Nordhaus' DICE model.
+		See: Nordhaus, W. D. 1994. Managing the Global Commons. Cambridge, MA: MIT \
+		Press.
+	|
+
+Average Atmos Retention = (CO2 Net Emiss-CO2 Storage)/Total Carbon Emissions
+	~	dmnl
+	~	Average atmospheric retention.
+	~	:SUPPLEMENTARY 
+	|
+
+Marginal Atmos Retention = 0.64
+	~	dmnl
+	~	Marginal Atmospheric Retention Fraction.
+		Fraction of Greenhouse Gas Emissions which accumulate in the atmosphere.
+	|
+
+CO2 in Atmos = INTEG(CO2 Net Emiss - CO2 Storage, 6.77e+11)
+	~	TonC
+	~	CO2 in atmosphere.
+	|
+
+CO2 Net Emiss = Marginal Atmos Retention*Total Carbon Emissions
+	~	TonC/year
+	~	CO2 emissions less short-run uptake (to mixed ocean layer).
+	|
+
+CO2 Storage = (CO2 in Atmos-Preindustrial CO2)*Rate of CO2 Transfer
+	~	TonC/year
+	~	CO2 removal from the atmosphere and storage by long-term processes.
+	|
+
+Rate of CO2 Transfer = 0.008333
+	~	1/year
+	~	Fractional rate of CO2 storage (corresponds to 120 year residence time)
+	|
+
+********************************************************
+	.Climate
+********************************************************~
+		Drawn from Nordhaus' DICE model.
+		See: Nordhaus, W. D. 1994. Managing the Global Commons. Cambridge, MA: MIT \
+		Press.
+	|
+
+Climate Sensitivity=
+	2.908
+	~	DegreesC
+	~	Equilibrium temperature change in response to a 2xCO2 equivalent change in \
+		radiative forcing
+	|
+
+Climate Feedback Param= INITIAL (
+	 CO2 Rad Force Coeff/Climate Sensitivity)
+	~	watt/meter/meter/DegreesC
+	~	Climate Feedback Parameter - determines feedback effect from temperature \
+		increase.
+	|
+
+CO2 Rad Forcing = CO2 Rad Force Coeff
+	*LOG(Effective CO2 in Atmosphere/Preindustrial CO2,2)
+	~	watt/meter/meter
+	~	Radiative forcing from accumulation of CO2.
+	|
+
+A UO Heat Cap = 44.248
+	~	watt*year/DegreesC/(meter*meter)
+	~	Atmosphere & Upper Ocean Heat Capacity per Unit Area
+	|
+
+Init Atmos UOcean Temp = 0.2
+	~	DegreesC
+	~	Initial Temperature of the Atmosphere and Upper Ocean
+	|
+
+Atmos UOcean Temp = INTEG(Chg A UO Temp, Init Atmos UOcean Temp)
+	~	DegreesC
+	~	Temperature of the Atmosphere and Upper Ocean
+	|
+
+Chg A UO Temp = (Radiative Forcing-Feedback Cooling-Heat Transfer)/A UO Heat Cap
+	~	DegreesC/year
+	~	Rate of Change in the Atmosphere & Upper Ocean Temperature.
+	|
+
+Chg DO Temp = Heat Transfer/DO Heat Cap
+	~	DegreesC/year
+	~	Rate of Change in the Deep Ocean Temperature
+	|
+
+CO2 Rad Force Coeff = 4.1
+	~	watt/meter/meter
+	~	Coefficient of Radiative Forcing from CO2
+	|
+
+Deep Ocean Temp = INTEG(Chg DO Temp, 0.1)
+	~	DegreesC
+	~	Temperature of the Deep Ocean
+	|
+
+DO Heat Cap= INITIAL (
+	 Heat Capacity Ratio*Heat Trans Coeff)
+	~	watt*year/DegreesC/meter/meter
+	~	Deep Ocean Heat Capacity per Unit Area
+	|
+
+Feedback Cooling = Atmos UOcean Temp*Climate Feedback Param
+	~	watt/meter/meter
+	~	Feedback cooling of atmosphere/upper ocean system due to blackbody \
+		radiation.
+	|
+
+Heat Capacity Ratio = 0.44
+	~	watt/(meter*meter*DegreesC)
+	~	Ratio of Thermal Capacity of Deep Ocean to Heat Transfer Time Constant
+	|
+
+Heat Trans Coeff = 500
+	~	year
+	~	Heat Transfer Coefficient [tau12] (years)
+		Coefficient of heat transfer between the atmosphere & upper ocean and the \
+		deep ocean. May be interpreted as a mixing time constant.
+	|
+
+Heat Transfer = Temp Diff*DO Heat Cap/Heat Trans Coeff
+	~	watt/meter/meter
+	~	Heat Transfer from the Atmosphere & Upper Ocean to the Deep Ocean
+	|
+
+Preindustrial CO2 = 5.9e+11
+	~	TonC
+	~	Preindustrial CO2 content of atmosphere.
+	|
+
+Radiative Forcing = CO2 Rad Forcing+DICE IPCC Other Rad Forcing
+	~	watt/meter/meter
+	~	Total Radiative Forcing from All GHGs
+	|
+
+Temp Diff = Atmos UOcean Temp-Deep Ocean Temp
+	~	DegreesC
+	~	Temperature Difference between Upper and Deep Ocean
+	|
+
+********************************************************
+	.Economy.Interest
+********************************************************~
+	|
+
+Gross Output per Cap=
+	Gross Output/Population
+	~	$/person/year
+	~	Gross output of goods and services per capita.
+	|
+
+Perceived Output per Cap=
+	 SMOOTH(Gross Output per Cap,Output Perc Time)
+	~	$/person/year
+	~	Perceived output per capita.
+	|
+
+Interest Rate Switch=
+	 0
+	~	dmnl
+	~	0 = Ramsey rule, 1 = constant interest rate.
+		Switch for determining basis for interest rate calculation.
+	|
+
+Ramsey Interest Rate = Output Trend*Consumer Inequal Aversion+Consumer Discount Rate
+	~	1/year
+	~	Interest rate from Ramsey rule.
+	|
+
+Const Interest Rate=
+	 0.055
+	~	1/year
+	~	Constant exogenous interest rate.
+	|
+
+Output Perc Time = 5
+	~	year
+	~	Time to perceive output per capita.
+	|
+
+Output Trend Establishment Time = 20
+	~	year
+	~	Time to establish output trends.
+	|
+
+Consumer Discount Rate=
+	 0.03
+	~	1/year
+	~	Effective discount rate for interest-rate setting.
+	|
+
+Consumer Inequal Aversion=
+	 1
+	~	dmnl
+	~	Effective elasticity of marginal utility (rate of inequality aversion) for \
+		interest-rate setting.
+	|
+
+Output Trend = TREND(Perceived Output per Cap,Output Trend Establishment Time,
+Hist Output Growth Rate)
+	~	1/year
+	~	Trend in per capita output.
+	|
+
+Hist Output Growth Rate = 0.04
+	~	1/year
+	~	Historic growth rate of output and investment.
+	|
+
+Interest Rate = Interest Rate Switch*Const Interest Rate
++(1-Interest Rate Switch)*Ramsey Interest Rate
+	~	1/year
+	~	Interest rate, switchable between constant and endogenous inputs.
+	|
+
+********************************************************
+	.Population
+********************************************************~
+	|
+
+Labor Force=
+	 Labor Force Fraction*Population
+	~	FTE
+	~	Labor force. Assumes invariable labor participation.
+	|
+
+Labor Force Fraction = 0.25
+	~	FTE/person
+	~	Fraction of population participating in labor force.
+	|
+
+Forecast Pop Growth Rt Decline Rt=
+	0.02
+	~	1/year
+	~	Forecast rate of decline of population growth rate. Calibrated (roughly) \
+		to EMF-14 scenario.
+	|
+
+Hist Pop Growth Rt Decline Rt=
+	0.01
+	~	1/year
+	~	Historic rate of decline of population growth rate. Calibrated to World \
+		Bank data.
+	|
+
+Pop Growth Switch Time=
+	1990
+	~	year
+	~	Year of switch from historic to forecast population growth rate decline \
+		rate.
+	|
+
+Pop Gr Rt Decline Rt=
+	IF THEN ELSE(Time > Pop Growth Switch Time,Forecast Pop Growth Rt Decline Rt
+	,Hist Pop Growth Rt Decline Rt)
+	~	1/year
+	~	Rate of Decline of Population Growth Rate
+	|
+
+Initial Pop Growth Rt = 0.0224
+	~	1/year
+	~	Initial population growth rate.
+	|
+
+Initial Population=
+	 3.041e+09
+	~	person
+	~	Initial population.
+	|
+
+Decline Pop Gr Rt = Pop Growth Rate*Pop Gr Rt Decline Rt
+	~	1/year/year
+	~	Decline of Population Growth Rate
+	|
+
+Population = INTEG(Net Pop Incr, Initial Population)
+	~	person
+	~	Population
+	|
+
+Pop Growth Rate = INTEG(- Decline Pop Gr Rt, Initial Pop Growth Rt)
+	~	1/year
+	~	Population Growth Rate
+	|
+
+Net Pop Incr = Population*Pop Growth Rate
+	~	person/year
+	~	Net Population Increase
+	|
+
+********************************************************
+	.Economy.Utilization
+********************************************************~
+	|
+
+Marg Capital'Energy per Aggr Energy=
+	Reference Capital'Energy Aggr
+	*(LR Capital Share*(Capital/Reference Capital)^Capital Energy Subst Coeff
+	+LR Energy Share*(Normal Aggr Energy Requirement/Ref Aggr Energy Production)
+	^Capital Energy Subst Coeff)
+	^(1/Capital Energy Subst Coeff-1)*LR Energy Share
+	*(Normal Aggr Energy Requirement/Ref Aggr Energy Production)
+	^(Capital Energy Subst Coeff-1)
+	/Ref Aggr Energy Production
+	~	Eff$/GJequiv*year
+	~	Marginal output of capital-energy aggregate per unit aggregate energy \
+		input.
+	|
+
+Normal Capital'Energy Aggr=
+	Reference Capital'Energy Aggr
+	*(LR Capital Share*(Capital/Reference Capital)^Capital Energy Subst Coeff
+	+LR Energy Share*(Normal Aggr Energy Requirement/Ref Aggr Energy Production)^
+	Capital Energy Subst Coeff)
+	^(1/Capital Energy Subst Coeff)
+	~	Eff$
+	~	Output of capital-energy aggregate good at normal capacity utilization.
+	|
+
+Operating Capital=
+	Normal Capital'Energy Aggr*Utilization
+	*Reference Operating Capital/Reference Capital'Energy Aggr
+	~	Op$
+	~	Operating capital. Equals the long-run CES capital-energy aggregate adjusted for
+		short-run utilization (from variation of energy input).
+	|
+
+Reference Operating Ratio = 1
+	~	Op$/Eff$
+	~	Reference ratio of operating capital to capital-energy aggregate.
+	|
+
+SR Energy Value Share[source] = Energy Requirement[source]
+	*Marginal Aggr Energy per Energy[source]/Normal Aggr Energy Requirement
+	~	dmnl
+	~	CES value share of aggregate energy good in capital-energy aggregate.
+	|
+
+Utilization = Operating Coeff^(1/SR Elast Coeff)
+	~	dmnl
+	~	Utilization of capital-energy aggregate. Can be interpreted as 
+		capacity utilization in the goods producing sector (1 = normal).
+	|
+
+SR Elasticity=
+	 0.1
+	~	dmnl
+	~	Short run elasticity of substitution between capital and aggregate energy \
+		input.
+	|
+
+********************************************************
+	.Economy.Capital
+********************************************************~
+	|
+
+Desired Capital Growth = Capital*LR Expected Output Growth Rate
+	~	$/year
+	~	Capital orders to meet expected growth in output. Since goods production
+		(unlike energy production) is not order driven, there is no order trend to 
+		follow; output growth is used instead.
+	|
+
+Capital Correction=
+	 (Desired Capital-Capital)/Capital Corr Time
+	~	$/year
+	~	Rate of correction to capital.
+	|
+
+Marg Prod Capital=
+	LR Marginal Prod of Eff Capital*Marg Capital'Energy per Capital
+	*Utilization
+	~	$/year/$
+	~	Marginal productivity of capital. In contrast to the energy sector \
+		formulation, utilization is considered here, as the goods producing sector \
+		is not order driven, and thus there is no separate production pressure \
+		effect.
+	|
+
+Desired Capital=
+	 Capital*Effect of Return
+	~	$
+	~	Desired capital, anchored to existing capital stock and adjusted for \
+		return.
+	|
+
+Marg Capital'Energy per Capital=
+	Reference Capital'Energy Aggr
+	*(LR Capital Share*(Capital/Reference Capital)^Capital Energy Subst Coeff
+	+LR Energy Share*(Normal Aggr Energy Requirement/Ref Aggr Energy Production)
+	^Capital Energy Subst Coeff)
+	^(1/Capital Energy Subst Coeff-1)*LR Capital Share
+	*(Capital/Reference Capital)^(Capital Energy Subst Coeff-1)
+	/Reference Capital
+	~	Eff$/$
+	~	Marginal output of capital-energy bundle per unit capital input.
+	|
+
+Discard Rate = Capital/Capital Lifetime
+	~	$/year
+	~	Goods producing capital discard rate.
+	|
+
+Perc Relative Return to Capital = SMOOTHI(Marg Prod Capital/Cost of Capital,
+	Return Perc Time,1)
+	~	dmnl
+	~	Ratio of marginal productivity to cost of capital.
+	|
+
+Desired Capital Order Rate = Capital Correction+Discard Rate+Desired Capital Growth
+	~	$/year
+	~	Desired capital order rate. Orders replace discards, provide for growth,
+		and adjust capital stock to desired level.
+	|
+
+LR Output Trend Time = 5
+	~	year
+	~	Time to establish long-term trend in output, for capital planning.
+	|
+
+LR Expected Output Growth Rate = TREND(Gross Output,
+	LR Output Trend Time,Hist Output Growth Rate)
+	~	1/year
+	~	Perceived long run trend in energy orders.
+	|
+
+Cost of Capital = Interest Rate+1/Capital Lifetime
+	~	1/year
+	~	Cost of capital for investment decision.
+	|
+
+Investment Rate = Desired Investment*Fraction of Invest Goods Avail
+	~	$/year
+	~	Investment rate. Constrained by availability of investment goods in \
+		extreme conditions.
+	|
+
+Desired Investment=
+	IF THEN ELSE(Investment Switch=1, max(0,Desired Capital Order Rate),
+	IF THEN ELSE(Investment Switch=2, Discard Rate, World Investment))
+	~	$/year
+	~	Desired investment rate in goods producing capital; switchable between endogenous,
+		equilibrium, and exogenous drivers.
+	|
+
+Investment Switch = 1
+	~	dmnl
+	~	0 = exogenous
+		1 = endogenous
+		2 = equilibrium
+		Switches investment rate between between endogenous,
+		equilibrium, and exogenous drivers. In equilibrium case,
+		capital orders just replace discards.
+	|
+
+Return Coeff = 1
+	~	dmnl
+	~	Coefficient of effect of relative return on desired capital.
+	|
+
+Effect of Return = Perc Relative Return to Capital^Return Coeff
+	~	dmnl
+	~	Effect of perceived relative return on desired capital.
+	|
+
+Capital = INTEG ( Investment Rate-Discard Rate,
+		Reference Capital)
+	~	$
+	~	Capital stock for goods production.
+	|
+
+********************************************************
+	.Economy.EnergyPricePerception
+********************************************************~
+	|
+
+SR Expected Energy Price[source]=
+	SMOOTH(Operative Energy Price[source],SR Energy Price Perc Time)
+	~	$/GJ
+	~	Perceived energy price for short-run (utilization) decisions.
+	|
+
+Operative Energy Price[source]=
+	Final Energy Price[source]*Energy Price Discount
+	~	$/GJ
+	~	Operative energy price for price perception. If availability switch is active,
+		the operative energy price is the greater of the energy sector price or the short-run
+		marginal product of energy in the economy. A systematic discount may be applied to \
+		the
+		perceived price to represent systematic biases in energy price perception.
+	|
+
+SR Energy Price Perc Time=
+	1
+	~	year
+	~	Time to perceive energy price for short-run (utilization) decisions.
+	|
+
+Energy Price Trend[source] =
+	LN(Perceived Energy Price[source]/Historic Energy Price[source])/Energy Trend Time
+	~	1/year
+	~	Rate of change in energy prices.
+	|
+
+Chg Hist Energy Price[source] =
+	(Perceived Energy Price[source]-Historic Energy Price[source])/Energy Trend Time
+	~	$/GJ/year
+	~	Rate of change of historic energy prices.
+	|
+
+Historic Energy Price[source] = INTEG (
+	Chg Hist Energy Price[source],
+		Operative Energy Price[source]/exp(Initial Price Trend[source]*Energy Trend Time))
+	~	$/GJ
+	~	Historic energy prices, for calculation of price trends.
+	|
+
+Perceived Energy Price[source] =
+	SMOOTH(Operative Energy Price[source],Energy Price Perc Time)
+	~	$/GJ
+	~	Perceived energy price for long-run (energy intensity of capital) \
+		decisions.
+	|
+
+LR Expected Energy Price[source] = Perceived Energy Price[source]
+	*exp(Energy Forecast Time*Energy Price Trend[source])
+	~	$/GJ
+	~	Long-run expected energy price, with perception delay and trend \
+		extrapolation.
+	|
+
+Initial Price Trend[source] = 0
+	~	1/year
+	~	Initial perceived trend in energy prices.
+	|
+
+Energy Trend Time=
+	 10
+	~	year
+	~	Time to establish energy price trends.
+	|
+
+Energy Price Perc Time=
+	 5
+	~	year
+	~	Time to smooth energy prices for long-run decisions.
+	|
+
+Energy Forecast Time=
+	 10
+	~	year
+	~	Time horizon for energy price extrapolation.
+	|
+
+Energy Price Discount = 1
+	~	dmnl
+	~	Discount or bias in energy price perception; 1 = normal (unbiased).
+	|
+
+********************************************************
+	.Economy.FactorProductivity
+********************************************************~
+	|
+
+Fractional Factor Prod Growth Rate= INTEG (
+	-Factor Prod Gr Rt Decline Rt,
+		 Init Frac Factor Prod Gr Rt)
+	~	1/year
+	~	Relative rate of change of technology.
+	|
+
+Factor Prod Gr Rt Decline Rt=
+	(Fractional Factor Prod Growth Rate-Asymptotic Frac Factor Prod Gr Rt)*Frac Factor Prod Gr Rt Decline Rt
+	~	1/year/year
+	~	Rate at which the technology growth rate decays to its asymptotic value.
+	|
+
+Asymptotic Frac Factor Prod Gr Rt=
+	 0.0075
+	~	1/year
+	~	Asymptotic rate of technological change.
+	|
+
+Init Frac Factor Prod Gr Rt=
+	0.015
+	~	1/year
+	~	Initial fractional rate of technology growth.
+	|
+
+Frac Factor Prod Gr Rt Decline Rt=
+	 0.01
+	~	1/year
+	~	Fractional rate of decline of the factor productivity growth rate.
+	|
+
+Factor Prod Chg Rt=
+	 Factor Productivity*Fractional Factor Prod Growth Rate
+	~	1/year
+	~	Rate of change of autonomous technology.
+	|
+
+Initial Factor Productivity = 1
+	~	dmnl
+	~	Initial technology level.
+	|
+
+Factor Productivity= INTEG (
+	Factor Prod Chg Rt,
+		Initial Factor Productivity)
+	~	dmnl
+	~	Autonomous technology level.
+	|
+
+********************************************************
+	.Economy.Output
+********************************************************~
+	|
+
+Gross Output=
+	Reference Output*Factor Productivity*Climate Damage Effect[Tangible]
+	*(Labor Force/Reference Labor)^Value Share of Labor
+	*(Operating Capital/Reference Operating Capital)^(1-Value Share of Labor)
+	~	$/year
+	~	Production of goods. Goods output price is fixed at $1.
+	|
+
+Value Share of Labor = 0.7
+	~	dmnl
+	~	Cobb-Douglas value share of labor in output.
+	|
+
+Marginal Prod of Labor = Value Share of Labor*Gross Output/Labor Force
+	~	$/year/FTE
+	~	Marginal productivity of labor.
+	~	:SUPPLEMENTARY 
+	|
+
+Reference Labor = INITIAL(Labor Force)
+	~	FTE
+	~	Reference labor force.
+	|
+
+Marg Prod Oper Capital = (1-Value Share of Labor)*Gross Output/Operating Capital
+	~	$/year/Op$
+	~	Marginal productivity of operating capital; i.e. marginal output \
+		[production] per unit of operating capital (the short-run fixed \
+		capital-energy aggregate).
+	|
+
+Reference Output = 6.124e+12
+	~	$/year
+	~	Reference goods output.
+	|
+
+********************************************************
+	.Energy.Utilization
+********************************************************~
+	|
+
+Max Effective Capital Intensity[source]=
+	(Max Input Ratio*Relative Variable Intensity[source])^(1-Capital Share[source])
+	~	dmnl
+	~	Ratio of current vs. initial ratio of output to capital. Output intensity varies
+		as interest rate variations affect desired balance of capital and variable \
+		inputs.
+	|
+
+Max Effective Energy Capital Ratio[source]=
+	 Energy Capital[source]/Reference Energy Capital[source]
+	*Energy Technology[source]*Max Effective Capital Intensity[source]
+	~	dmnl
+	~	Ratio current vs. initial production effort, with adjustments for capital scale,
+		technology, and varying input intensity.
+	|
+
+Desired Eff Energy Capital Ratio[source]=
+	(((Scheduled Production[source]/Initial Production[source])^Saturation Coeff[source]
+	-Resource Share[source]*Resource Ratio[source]^Saturation Coeff[source])
+	/(1-Resource Share[source]))^(1/Saturation Coeff[source])
+	~	dmnl
+	~	Desired ratio of intensive inputs to normal level.
+	|
+
+Desired Variable Input[source]=
+	Reference Variable Cost[source]
+	*((Desired Eff Energy Capital Ratio[source]/Energy Technology[source])
+	/(Energy Capital[source]/Reference Energy Capital[source])^Capital Share[source])
+	^(1/(1-Capital Share[source]))
+	~	$/year
+	~	Desired input of goods to energy production.
+	|
+
+Total Energy Production = SUM(Energy Production[source!])
+	~	GJ/year
+	~	Total energy production (in physical terms).
+	|
+
+Max Production[source]=
+	 Initial Production[source]
+	*(Resource Share[source]*Resource Ratio[source]^Saturation Coeff[source]
+	+(1-Resource Share[source])*Max Effective Energy Capital Ratio[source]
+	^Saturation Coeff[source])^(1/Saturation Coeff[source])
+	~	GJ/year
+	~	Upper limit to production in the short run (when capital is fixed).
+	|
+
+Energy Capacity Utilization[source]=
+	 Scheduled Production[source]/Normal Production[source]*Fraction of Energy Goods Avail
+	~	dmnl
+	~	Effect of variable input on production level (can be thought of as \
+		capacity utilization, where 1 = normal).
+	|
+
+Energy Production[source]=
+	Normal Production[source]*Energy Capacity Utilization[source]
+	~	GJ/year
+	~	Actual energy production, based on normal production adjusted for \
+		production effort (utilization).
+	|
+
+Energy Order Rate[source]=
+	 Exog Order Switch*Production Data[source]
+	+(1-Exog Order Switch)*Indicated Energy Order Rate[source]
+	~	GJ/year
+	~	Incoming orders for energy sources; switchable between endogenous and \
+		exogenous drivers.
+	|
+
+Initial Production[source] = 5.67e+10,6.28e+10,6.4e+09,2.36e+07
+	~	GJ/year
+	~	Oil, Gas: 4.53e+010,1.75e+010
+	|
+
+Relative Variable Intensity[source]=
+	(Energy Capital Cost[source]*Reference Energy Capital[source]
+	*(1-Capital Share[source]))
+	/(1*Reference Variable Cost[source]*Capital Share[source])
+	~	dmnl
+	~	Ratio of current to initial intensity of variable inputs to energy production.
+		The intensity of variable (vs. capital) inputs to production falls as \
+		interest rates fall.
+	|
+
+Normal Variable Cost[source]=
+	 Reference Variable Cost[source]*Energy Capital[source]
+	/Reference Energy Capital[source]
+	*Relative Variable Intensity[source]
+	~	$/year
+	~	Normal rate of variable cost inputs to energy production. Anchored to reference \
+		variable
+		cost and adjusted for changes in capital scale and capital-variable factor \
+		balance.
+	|
+
+Reference Variable Cost[source] = INITIAL(Reference Pretax Expenditure[source]
+	*Variable Share[source])
+	~	$/year
+	~	Reference variable cost (goods) input rate by source.
+	|
+
+Variable Share[source] = INITIAL(1-Capital Share[source])
+	~	dmnl
+	~	CES value share of variable costs in short-run output.
+	|
+
+Energy Delivery Delay = 0.25
+	~	year
+	~	Delay between production and delivery of energy to goods producing sector.
+	|
+
+Energy Delivery[source] = SMOOTHI(Energy Production[source],Energy Delivery Delay
+,Initial Production[source])
+	~	GJ/year
+	~	Energy delivery rate; equals delayed production. !
+	|
+
+Max Input Ratio=
+	 10
+	~	dmnl
+	~	Maximum allowable ratio of variable inputs to normal variable input level. \
+		Normally, in CES aggregate between capital and variable inputs, the short \
+		run (fixed capital) upper limit to production is attained only with \
+		infinite variable input. This formulation assumes that there is actually a \
+		practical or behavioral upper limit to variable input. Thus the realizable \
+		upper limit to production is less than the CES upper limit with infinite \
+		inputs.
+	|
+
+Scheduled Production[source] = MIN(Max Production[source],Energy Order Rate[source])
+	~	GJ/year
+	~	Scheduled energy production rate; equals incoming orders adjusted for an \
+		upper limit to production.
+	|
+
+Capital Share[source] = 0.6,0.6,0.8,0.8
+	~	dmnl
+	~	CES value share of capital in output.
+	|
+
+********************************************************
+	.Energy.DepletionSaturation
+********************************************************~
+	|
+
+Resource Ratio[Renewable]=
+	1 ~~|
+Resource Ratio[nonrenewable]=
+	Resource Remaining[nonrenewable]/Init Resource Remaining[nonrenewable]
+	~	dmnl
+	~	Ratio of current to initial resource endowment. For renewables, this is by \
+		definition 1, as the resource size is unchanging. For nonrenewables, this \
+		equals the resource remaining expressed as a fraction of initial resource \
+		remaining.
+	|
+
+Normal Production[source]=
+	 Initial Production[source]*Resource Effect[source]
+	 *Normal Effective Energy Capital Ratio[source]
+	~	GJ/year
+	~	Energy production at normal utilization, incorporating effects of scale of \
+		effort, depletion (for nonrenewables), and saturation (for renewables).
+	|
+
+Min Depletion Time=
+	20
+	~	year
+	~	Minimum time to deplete remaining nonrenewable resource
+	|
+
+Fraction Consumed[nonrenewable]=
+	Cumulative Production[nonrenewable]/Initial Resource[nonrenewable]
+	~	dmnl
+	~	Fraction of ultimate resource consumed.
+	~	:SUPPLEMENTARY 
+	|
+
+Normal Effective Capital Intensity[source]=
+	Relative Variable Intensity[source]^(1-Capital Share[source])
+	~	dmnl
+	~	Ratio of current vs. initial ratio of output to capital. Output intensity varies
+		as interest rate variations affect desired balance of capital and variable \
+		inputs.
+	|
+
+Init Resource Remaining[nonrenewable]= INITIAL (
+	Initial Resource[nonrenewable]-Init Cum Prod[nonrenewable])
+	~	GJ
+	~	Initial resource remaining.
+	|
+
+Resource Effect[source]=
+	(Resource Share[source]*Resource Ratio[source]^Saturation Coeff[source]
+	+(1-Resource Share[source])*Normal Effective Energy Capital Ratio[source]
+	^Saturation Coeff[source])^(1/Saturation Coeff[source])
+	/Normal Effective Energy Capital Ratio[source]
+	~	dmnl
+	~	Effect of depletion and saturation on average productivity of capital.
+	|
+
+Saturation Coeff[source]= INITIAL (
+	(Saturation Elasticity[source]-1)/Saturation Elasticity[source])
+	~	dmnl
+	~	CES coefficient of substitution between fixed resource endowment and other \
+		inputs.
+	|
+
+Marginal Resource Effect[source]=
+	(Resource Share[source]*Resource Ratio[source]^Saturation Coeff[source]
+	+(1-Resource Share[source])*Normal Effective Energy Capital Ratio[source]
+	^Saturation Coeff[source])^(1/Saturation Coeff[source]-1)
+	*Normal Effective Energy Capital Ratio[source]^(Saturation Coeff[source]-1)
+	/Resource Effect[source] {*(1-Resource Share[source])}
+	~	dmnl
+	~	Marginal effect of depletion and saturation on productivity, expressed as \
+		ratio of marginal to average product, at normal utilization. The last term \
+		(in brackets) is omitted because the fixed factor (i.e. the resource \
+		endowment) is unremunerated.
+	|
+
+Normal Effective Energy Capital Ratio[source]=
+	 Energy Capital[source]/Reference Energy Capital[source]
+	*Energy Technology[source]*Normal Effective Capital Intensity[source]
+	~	dmnl
+	~	Ratio current vs. initial production effort, with adjustments for capital scale,
+		technology, and varying input intensity.
+	|
+
+Resource Remaining[nonrenewable]= INTEG (
+	-Energy Production[nonrenewable],
+		Init Resource Remaining[nonrenewable])
+	~	GJ
+	~	Resources remaining.
+	|
+
+Resource Share[Renewable]= INITIAL (
+	 (Reference Resource[Renewable]/Initial Production[Renewable])
+	 ^Saturation Coeff[Renewable]) ~~|
+Resource Share[nonrenewable]= INITIAL (
+	(Init Resource Remaining[nonrenewable]/Min Depletion Time
+	/Initial Production[nonrenewable])
+	 ^Saturation Coeff[nonrenewable])
+	~	dmnl
+	~	Share of fixed factors (resource endowment) in renewable energy \
+		production; set such that upper limit to renewable output is at a \
+		specified level.
+	|
+
+Saturation Elasticity[nonrenewable]=
+	 0.7 ~~|
+Saturation Elasticity[Renewable]=
+	0.5
+	~	dmnl
+	~	Elasticity of substitution between fixed factors and capital for renewable \
+		sources, for saturation effect.
+	|
+
+Cumulative Production[nonrenewable] = INTEG(Energy Production[nonrenewable]
+,Init Cum Prod[nonrenewable])
+	~	GJ
+	~	Cumulative production of energy.
+	|
+
+Init Cum Prod[nonrenewable] = INITIAL(Initial Production[nonrenewable]
+	/Hist Energy Growth Rate[nonrenewable])
+	~	GJ
+	~	Initial cumulative production; "backstrapolated" using current production \
+		and historical growth rate.
+	|
+
+Initial Resource[Coal]=
+	3e+14 ~~|
+Initial Resource[OilGas]=
+	3.05e+13
+	~	GJ
+	~	EMF-14 values (95th percentile). Alternate values: 4.34e+014, 2.51e+013
+	|
+
+Fraction Exploited[Renewable] = Normal Production[Renewable]/Reference Resource[Renewable
+]
+	~	dmnl
+	~	Fraction of renewable resource potential exploited.
+	~	:SUPPLEMENTARY 
+	|
+
+Reference Resource[HN]=
+	1.28e+11 ~~|
+Reference Resource[New] = 1.9e+12
+	~	GJ/year
+	~	Upper limit to renewable output. Upper limit for HN based primarily on \
+		hydro endowment, with nuclear potential implicitly assumed to be \
+		politically limited.
+	|
+
+********************************************************
+	.Carbon.Emissions
+********************************************************~
+	|
+
+Emissions Intensity of Capital=
+	Total Energy Carbon Emissions/Capital
+	~	TonC/year/$
+	~	Average emissions intensity of capital stock (neglecting nonenergy \
+		emissions).
+	~	:SUPPLEMENTARY 
+	|
+
+Emissions Pulse Time=
+	2000
+	~	year
+	~	Year of emissions test pulse.
+	|
+
+Emissions Pulse Volume=
+	0
+	~	TonC
+	~	Volume of test carbon pulse to atmosphere.
+	|
+
+Emissions Pulse=
+	IF THEN ELSE(Time >= Emissions Pulse Time :AND: Time < Emissions Pulse Time+TIME STEP
+,Emissions Pulse Volume/TIME STEP,0)
+	~	TonC/year
+	~	Rate of emissions from test pulse of given volume.
+	|
+
+Total Carbon Emissions=
+	 Total Energy Carbon Emissions+Nonenergy Carbon Emissions+Emissions Pulse
+	~	TonC/year
+	~	Emissions of carbon from energy use and other sources.
+	|
+
+Emissions Intensity of Output=
+	Total Energy Carbon Emissions/Gross Output
+	~	TonC/$
+	~	Average emissions intensity of gross output of goods and services \
+		(neglecting nonenergy emissions).
+	~	:SUPPLEMENTARY 
+	|
+
+Emissions Intensity of Aggr Energy=
+	Total Energy Carbon Emissions/SR Aggr Energy
+	~	TonC/GJequiv
+	~	Average emissions intensity of aggregate energy product (neglecting \
+		nonenergy emissions).
+	~	:SUPPLEMENTARY 
+	|
+
+Emissions Intensity of Energy=
+	Total Energy Carbon Emissions/Total Energy Production
+	~	TonC/GJ
+	~	Average emissions intensity of energy in physical terms (neglecting \
+		nonenergy emissions).
+	~	:SUPPLEMENTARY 
+	|
+
+Energy Carbon Emissions[nonrenewable]=
+	 Energy Production[nonrenewable]*Carbon Content[nonrenewable]
+	~	TonC/year
+	~	Carbon emissions rate from energy production.
+	|
+
+Nonenergy Carbon Emissions
+	~	TonC/year
+	~	Nonenergy carbon emissions.
+	|
+
+Total Energy Carbon Emissions=
+	 SUM(Energy Carbon Emissions[nonrenewable!])
+	~	TonC/year
+	~	Total carbon emissions from all energy sources
+	|
+
+********************************************************
+	.Policy.Tax
+********************************************************~
+	|
+
+Minimum Carbon Tax=
+	0
+	~	$/TonC
+	~	Minimum carbon tax; constrains tax to prevent negative taxes (i.e. \
+		subsidies) from creating negative energy prices. Negative minimum taxes \
+		should be tested occasionally for full exploration of the policy space.
+	|
+
+Indicated Carbon Tax=
+	max(Minimum Carbon Tax,(Effective CO2 in Atmosphere-Preindustrial CO2)/Preindustrial CO2
+*Concentration Coeff
+	+(Perceived Emissions Rate-Reference Emissions Rate)/Reference Emissions Rate
+	*Emissions Coeff+Constant Tax)
+	~	$/TonC
+	~	Indicated carbon tax level.
+	|
+
+Energy Tax= INTEG (
+	Energy Tax Adj Rate,
+		0)
+	~	$/GJ
+	~	Tax on all energy sources.
+	|
+
+Carbon Tax= INTEG (
+	Carbon Tax Adj Rate,
+		0)
+	~	$/TonC
+	~	Effective carbon tax on carbon-based energy sources.
+	|
+
+Carbon Tax Adj Rate=
+	STEP((Indicated Carbon Tax-Carbon Tax)/Tax Adj Time,Initial Tax Time)
+	~	$/TonC/year
+	~	Rate of change of implemented carbon tax.
+	|
+
+Total Tax[nonrenewable]=
+	Energy Tax+Specific Carbon Tax[nonrenewable] ~~|
+Total Tax[Renewable]=
+	Energy Tax
+	~	$/GJ
+	~	Indicated tax on energy sources.
+	|
+
+Constant Energy Tax=
+	0
+	~	$/GJ
+	~	Constant component of carbon tax.
+	|
+
+Energy Tax Adj Rate=
+	STEP((Constant Energy Tax-Energy Tax)/Tax Adj Time,Initial Tax Time)
+	~	$/GJ/year
+	~	Rate of adjustment of tax on all energy sources.
+	|
+
+Specific Carbon Tax[nonrenewable]=
+	Carbon Tax*Carbon Content[nonrenewable]
+	~	$/GJ
+	~	Carbon tax by energy source.
+	|
+
+Carbon Content[nonrenewable]= 0.0247,0.0171
+	~	TonC/GJ
+	~	Carbon content of fuels. Oil, Gas: 0.0207,0.0134, weighted by resource \
+		endowment.
+	|
+
+Constant Tax= 0
+	~	$/TonC
+	~	Constant term in carbon tax.
+	|
+
+Emissions Perception Time= 1
+	~	year
+	~	Time to perceive carbon emissions rate.
+	|
+
+Reference Emissions Rate= 5e+09
+	~	TonC/year
+	~	Reference carbon emissions rate.
+	|
+
+Emissions Coeff= 0
+	~	$/TonC
+	~	Coefficient for emissions rate contribution to carbon tax.
+	|
+
+Perceived Emissions Rate=
+	SMOOTH(Total Energy Carbon Emissions,Emissions Perception Time)
+	~	TonC/year
+	~	Perceived rate of carbon emissions from energy production.
+	|
+
+Concentration Coeff = 0
+	~	$/TonC
+	~	Coefficient for atmospheric concentration contribution to carbon tax.
+	|
+
+Initial Tax Time = 1995
+	~	year
+	~	Year in which tax implementation begins.
+	|
+
+Tax Adj Time = 5
+	~	year
+	~	Time to adjust taxes to indicated levels.
+	|
+
+********************************************************
+	.Energy.Sources
+********************************************************~
+	|
+
+********************************************************
+	.Energy.Pricing
+********************************************************~
+	|
+
+Adjusted Average Cost[source]=
+	SR Average Cost[source]/Marginal Resource Effect[source]
+	~	$/GJ
+	~	Average cost of energy production, adjusted for long run (resource) \
+		effects on marginal cost, but not short run (utilization) effects.
+	|
+
+Indicated Producer Price[source]=
+	Energy Producer Price[source]*Supply Demand Effect[source]
+	*(SR Marginal Cost[source]/Energy Producer Price[source])^Weight to Marg Cost
+	*(Adjusted Average Cost[source]/Energy Producer Price[source])^Weight to Average Cost
+	~	$/GJ
+	~	Indicated price of energy sources, prior to taxes and distribution costs. \
+		Switchable between marginal and average cost prices.
+	|
+
+Primary Energy Price[nonrenewable]=
+	Energy Producer Price[nonrenewable]+Depletion Rent[nonrenewable] ~~|
+Primary Energy Price[Renewable]=
+	Energy Producer Price[Renewable]
+	~	$/GJ
+	~	Price of primary energy, including depletion rent.
+	|
+
+Effective Primary Energy Price[source]=
+	Exog Energy Price Switch[source]*Price Data[source] + (1-Exog Energy Price Switch[source
+])*Primary Energy Price[
+source]
+	~	$/GJ
+	~	Primary energy price, switchable between endogenous and exogenous drivers.
+	|
+
+SR Average Cost[source]=
+	 SR Average Variable Cost[source]+Capital Cost[source]
+	~	$/GJ
+	~	Indicated price of energy on the basis of average variable cost and \
+		capital cost, scaled to reflect demand pressure.
+	|
+
+SR Marginal Cost[source]=
+	Marginal Variable Input[source]*Marginal Eff Energy Capital Ratio[source]
+	~	$/GJ
+	~	Short run marginal cost of energy production.
+	|
+
+Weight to Average Cost=
+	1
+	~	dmnl
+	~	Weight to average cost in price calculation.
+	|
+
+Marginal Variable Input[source]=
+	Reference Variable Cost[source]
+	*((Desired Eff Energy Capital Ratio[source]/Energy Technology[source])
+	/(Energy Capital[source]/Reference Energy Capital[source])^Capital Share[source])
+	^(1/(1-Capital Share[source])-1)/Energy Technology[source]
+	/(Energy Capital[source]/Reference Energy Capital[source])^Capital Share[source]
+	*(1/(1-Capital Share[source]))
+	~	$/year
+	~	Marginal variable cost per unit increase in capital-variable aggregate.
+	|
+
+Marginal Eff Energy Capital Ratio[source]=
+	(((Scheduled Production[source]/Initial Production[source])
+	^Saturation Coeff[source]-Resource Share[source]*Resource Ratio[source]
+	^Saturation Coeff[source])/(1-Resource Share[source]))
+	^(1/Saturation Coeff[source]-1)
+	*(Scheduled Production[source]/Initial Production[source])
+	^(Saturation Coeff[source]-1)
+	/Initial Production[source]/(1-Resource Share[source])
+	~	year/GJ
+	~	Marginal increase in capital-variable aggregate per unit increase in \
+		production.
+	|
+
+Final Data Time= 1990
+	~	year
+	~	Year in which transition from price data to endogenous prices begins.
+	|
+
+Exog Energy Price Switch[source]=
+	 Price Switch[source]
+	*(1-RAMP(1/Transition Time,Final Data Time,Final Data Time+Transition Time))
+	~	dmnl
+	~	Switch between exogenous and endogenous energy prices and capacity planning.
+		Units error in RAMP is a Vensim bug.
+	|
+
+Transition Time= 5
+	~	year
+	~	Time for transition between exogenous and endogenous energy prices.
+	|
+
+Init Unit Distribution Cost[source] = 0
+	~	$/GJ
+	~	Initial unit energy distribution cost.
+	|
+
+Energy Producer Price[source] = INTEG(Producer Price Chg Rt[source],
+	Initial Producer Price[source])
+	~	$/GJ
+	~	Endogenous primary energy price; adjusts to indicated price with a delay.
+	|
+
+Final Energy Price[source] = Effective Primary Energy Price[source]+Total Tax[source]
+	+Init Unit Distribution Cost[source]
+	~	$/GJ
+	~	Price of energy sources, including taxes and distribution costs.
+	|
+
+Producer Price Chg Rt[source] = (Indicated Producer Price[source]-Energy Producer Price
+[source])
+	/Price Adjustment Time
+	~	$/GJ/year
+	~	Rate of adjustment of energy price.
+	|
+
+Initial Producer Price[source]=
+	 1.278,1.297,6.648,60
+	~	$/GJ
+	~	Initial prices of energy. From price data series. Oil, gas: 1.145, 1.69, \
+		weighted by initial production.
+	|
+
+Price Switch[nonrenewable]=
+	 1 ~~|
+Price Switch[Renewable]=
+	0
+	~	dmnl
+	~	0 = endogenous, 1 = exogenous
+		Switches between endogenous and exogenous price drivers.
+	|
+
+Source Expenditure[source] = Final Energy Price[source]*Energy Production[source]
+	~	$/year
+	~	Energy expenditures, by source.
+	|
+
+Supply Demand Coeff = 2
+	~	dmnl
+	~	Coefficient of production pressure effect on average cost price.
+	|
+
+Supply Demand Effect[source] = Production Pressure[source]^Supply Demand Coeff
+	~	dmnl
+	~	Effect of production pressure (demand/supply ratio) on average cost price.
+	|
+
+Capital Cost Basis Switch = 0
+	~	dmnl
+	~	Basis for calculating unit capital costs.
+		0 = normal production (nonrecovery of capital costs with low demand)
+		1 = actual production (allows utility death spiral)
+	|
+
+Capital Cost[source]=
+	(Energy Capital Cost[source]*Energy Capital[source])
+	/(Capital Cost Basis Switch*Energy Production[source]
+	+(1-Capital Cost Basis Switch)*Normal Production[source])
+	~	$/GJ
+	~	Unit capital cost, on the basis of production (leads to utility death \
+		spiral) or normal production (leads to nonrecovery of capital costs with \
+		low demand).
+	|
+
+Price Adjustment Time = 1
+	~	year
+	~	Time to adjust energy prices. Reflects delays in behavior as well as \
+		contract turnover and regulatory adjustment times.
+	|
+
+Weight to Marg Cost = 0
+	~	dmnl
+	~	Weight to short run marginal cost in price setting.
+	|
+
+SR Average Variable Cost[source] = Desired Variable Input[source]
+	/Energy Production[source]
+	~	$/GJ
+	~	Short run average variable cost of energy production.
+	|
+
+Production Pressure[source] = Energy Order Rate[source]/Normal Production[source]
+	~	dmnl
+	~	Production pressure, expressed as ratio of orders to normal production.
+	|
+
+********************************************************
+	.Energy.Technology
+********************************************************~
+	|
+
+Energy Technology[source]=
+	(1-Tech Data Switch)*Indicated Energy Technology[source]
+	+Tech Data Switch*Technology Data[source]
+	~	dmnl
+	~	Energy technology level, switchable between exogenous (data from another run)
+		and endogenous drivers.
+	|
+
+Indicated Energy Technology[source]=
+	1/(Low Lim Energy Tech[source]+(1-Low Lim Energy Tech[source])
+	/Induced Energy Technology[source]^Endogenous Tech Fraction
+	/Autonomous Technology[source]^(1-Endogenous Tech Fraction)
+	/Energy Scale Economy[source])
+	~	dmnl
+	~	Indicated energy technology level, including effect of lower bound
+		to cost reduction from technological improvement.
+	|
+
+Cumulative Energy Investment[source]= INTEG (
+	Energy Capital Completion Rate[source],
+		Init Cum Energy Investment[source])
+	~	$
+	~	Cumulative investment in energy capital; drives learning process.
+	|
+
+Induced Energy Technology[source]=
+	 (Cumulative Energy Investment[source]
+	/Init Cum Energy Investment[source])^Energy Learning Coeff
+	~	dmnl
+	~	Effect of learning on energy technology.
+	|
+
+Tech Data Switch=
+	0
+	~	dmnl
+	~	Weight to technology from exogenous data series in calculation of total \
+		technology level; 0 = model generated, 1 = data.
+	|
+
+Technology Data[source]
+	~	dmnl
+	~	Technology data series (normally from another run)
+	|
+
+Auton Energy Tech Growth Rate[source]=
+	 0.01,0.01,0.01,0.05
+	~	1/year
+	~	Fractional rate of autonomous energy technology improvement.
+	|
+
+Low Lim Energy Tech[source]=
+	0.1,0.1,0.1,0.01
+	~	dmnl
+	~	Lower limit to energy production cost reduction from energy technology.
+		A nonzero value implies that there are some irreducible costs of energy \
+		production.
+	|
+
+Energy Learning Coeff= INITIAL (
+	-LOG(Energy Learning Rate,2))
+	~	dmnl
+	~	Coefficient of learning curve effect.
+	|
+
+Endogenous Tech Fraction=
+	 1
+	~	dmnl
+	~	Weight of induced technology in aggregate technological change (0 = \
+		completely autonomous; 1 = completely induced).
+	|
+
+Autonomous Technology[source]= INTEG (
+	Auton Energy Tech Chg Rt[source],
+		1)
+	~	dmnl
+	~	Effect of autonomous technological improvement on energy technology level.
+	|
+
+Auton Energy Tech Chg Rt[source] = Autonomous Technology[source]
+*Auton Energy Tech Growth Rate[source]
+	~	1/year
+	~	Rate of autonomous technological improvement.
+	|
+
+Energy Learning Rate=
+	 0.8
+	~	dmnl
+	~	Coefficient of induced technological change, expressed as a standard learning rate.
+		1 = no learning; .7 to .9 typical.
+	|
+
+Init Cum Energy Investment[source] = INITIAL(Energy Capital[source]
+	/Energy Capital Lifetime[source]/Hist Energy Growth Rate[source])
+	~	$
+	~	Initial cumulative energy investment; "backstrapolated" using current \
+		capital and historical growth rate.
+	|
+
+Hist Energy Growth Rate[source]=
+	 0.02,0.06,0.02, 0.06
+	~	1/year
+	~	Historic growth rate of energy production, for estimating initial \
+		cumulative production stocks. Relatively unimportant, as recent history \
+		dominates cumulative production. Oil: 1938-1960, Coal 1960-1970, Gas \
+		1960-1970, HN, 1925-1960, New arbitrary.
+	|
+
+Energy Scale Effect=
+	1
+	~	dmnl
+	~	Cost reducing returns to scale in energy production. 1 = constant returns. \
+		Expressed in same terms as learning coefficient - cost reduction per \
+		doubling of scale - so a value of .8 implies 20% cost reduction for a \
+		doubling of scale.
+	|
+
+Energy Scale Coeff= INITIAL (
+	-LOG(Energy Scale Effect,2))
+	~	dmnl
+	~	Coefficient of energy scale economy effect.
+	|
+
+Energy Scale Economy[source]=
+	(Energy Capital[source]/Reference Energy Capital[source])^Energy Scale Coeff
+	~	dmnl
+	~	Cost-reducing economies of scale in energy production.
+	|
+
+********************************************************
+	.Energy.Initialization
+********************************************************~
+	|
+
+Reference Pretax Expenditure[source] = INITIAL(Initial Production[source]
+*Initial Producer Price[source])
+	~	$/year
+	~	Reference energy expenditure by source, excluding taxes and distribution \
+		costs.
+	|
+
+Ref Total Expenditure = INITIAL(SUM(Reference Final Expenditure[source!]))
+	~	$/year
+	~	Reference total energy expenditure.
+	|
+
+Reference Final Expenditure[source]= INITIAL (
+	Final Energy Price[source]*Initial Production[source]*Energy Price Discount)
+	~	$/year
+	~	Reference energy expenditure by source, including taxes and distribution \
+		costs.
+	|
+
+Ref Energy Value Share[Coal]=
+	 0.185 ~~|
+Ref Energy Value Share[OilGas]=
+	1-Ref Energy Value Share[Coal]
+	-Ref Energy Value Share[HN]-Ref Energy Value Share[New] ~~|
+Ref Energy Value Share[HN]=
+	0.216 ~~|
+Ref Energy Value Share[New]=
+	 	0.0101
+	~	dmnl
+	~	Reference CES value share of energy sources.
+	|
+
+Exog Order Switch = 0
+	~	dmnl
+	~	0 = endogenous
+		1 = exogenous  (production data)
+		Switches energy orders between data and endogenous drivers.
+	|
+
+Ref Aggr Energy Production = 1.26e+11
+	~	GJequiv/year
+	~	Reference production of CES aggregate energy good.
+	|
+
+********************************************************
+	.Energy.Capital
+********************************************************~
+	|
+
+Marg Prod Energy Capital[nonrenewable]=
+	 Capital Share[nonrenewable]
+	*(Effective Primary Energy Price[nonrenewable]-Depletion Rent[nonrenewable])
+	*LR Marg Prod Effect[nonrenewable] ~~|
+Marg Prod Energy Capital[Renewable]=
+	 Capital Share[Renewable]*Effective Primary Energy Price[Renewable]
+	*LR Marg Prod Effect[Renewable]
+	~	1/year
+	~	Marginal productivity of capital, incorporating effects of output price,
+		         depletion/exploitation/technology, and utilization.
+	|
+
+LR Marg Prod Effect[source]=
+	 Normal Production[source]/Energy Capital[source]*Marginal Resource Effect[source]
+	~	GJ/$/year
+	~	Effect of long run factors on marginal productivity of energy capital.
+		For nonrenewables, varies with depletion and technology.
+		For renewables, varies with technology and saturation.
+	|
+
+Desired Energy Capital[source]= Energy Capital[source]
+	*Production Pressure[source]*Effect of Return on Energy Capital[source]
+	~	$
+	~	Desired energy capital; equals current capital adjusted for production \
+		pressure and relative return.
+	|
+
+Effect of Return on Energy Capital[source]= Exog Energy Price Switch[source]
+	 + (1-Exog Energy Price Switch[source])*Perc Relative Return[source]^Return Coeff
+	~	dmnl
+	~	Effect of relative return on desired energy capital. When exogenous energy \
+		prices are used, effect of return is switched off.
+	|
+
+Initial Production Growth[source] = INITIAL(Hist Energy Growth Rate[source])
+	~	1/year
+	~	Initial growth rate of production; equal to historic rates.
+	|
+
+Indicated Energy Capital Completion Rate[source] = 
+	Energy Capital under Constr[source]/Energy Construction Delay[source]
+	~	$/year
+	~	Indicated rate of completion of energy capital on order.
+	|
+
+Energy Capital Completion Rate[source] = 
+	Indicated Energy Capital Completion Rate[source]*Fraction of Invest Goods Avail
+	~	$/year
+	~	Rate of completion of capital under construction, constrained by \
+		availability of investment goods.
+	|
+
+Energy Capital Order Rate[source] = max(0,Desired Energy Capital Order Rate[source])
+	~	$/year
+	~	Energy capital order rate. Constrained to be nonnegative (no \
+		cancellations).
+	|
+
+Perc Relative Return[source] = 
+	SMOOTHI(Marg Prod Energy Capital[source]/Energy Capital Cost[source],
+	Return Perc Time,1)
+	~	dmnl
+	~	Perceived relative return to capital; equal to delayed ratio of marginal \
+		product to price of capital.
+	|
+
+Reference Energy Capital[source] = INITIAL(Reference Pretax Expenditure[source]
+	*Capital Share[source]/Energy Capital Cost[source])
+	~	$
+	~	Reference capital stock for energy production.
+	|
+
+LR Order Trend Time = 5
+	~	year
+	~	Time to establish long-term trends in orders, for capital planning.
+	|
+
+Energy Capital Cost[source] = Interest Rate+1/Energy Capital Lifetime[source]
+	~	1/year
+	~	Price of capital, including interest and depreciation.
+	|
+
+LR Expected Order Growth Rate[source] = TREND(Energy Order Rate[source],
+	LR Order Trend Time,Initial Production Growth[source])
+	~	1/year
+	~	Perceived long run trend in energy orders.
+	|
+
+Return Perc Time = 2
+	~	year
+	~	Time to perceive relative return on capital.
+	|
+
+Desired Energy Capital Order Rate[source] = Energy Capital Discard Rate[source]
+	+ Energy Capital Correction[source] + Energy Supply Line Correction[source]
+	~	$/year
+	~	Desired energy capital order rate; equals discard rate plus corrections \
+		for capital and supply line stocks.
+	|
+
+Desired Energy Capital under Constr[source] = (Energy Capital Discard Rate[source]
+	+LR Expected Order Growth Rate[source]*Energy Capital[source])
+	*Energy Construction Delay[source]
+	~	$
+	~	Desired energy capital under construction; equals quantity needed to \
+		replace discards and meet growth.
+	|
+
+Energy Capital Correction[source] = 
+	(Desired Energy Capital[source]-Energy Capital[source])
+	/Capital Corr Time
+	~	$/year
+	~	Rate of correction to energy capital stock.
+	|
+
+Energy Capital Discard Rate[source] = 
+	Energy Capital[source]/Energy Capital Lifetime[source]
+	~	$/year
+	~	Energy capital discard rate.
+	|
+
+Energy Capital[source] = INTEG(Energy Capital Completion Rate[source]
+-Energy Capital Discard Rate[source],
+Reference Energy Capital[source])
+	~	$
+	~	Energy production capital stock. For fossil fuels, can be conceived of as \
+		developed fields or mines.
+	|
+
+Capital Corr Time = 4
+	~	year
+	~	Time to adjust capital stock.
+	|
+
+Energy Capital Lifetime[source] = 20,20,40,30
+	~	year
+	~	Lifetime of capital.
+	|
+
+Energy Capital under Constr[source] = INTEG(Energy Capital Order Rate[source]
+-Energy Capital Completion Rate[source]
+,Desired Energy Capital under Constr[source])
+	~	$
+	~	Stock of energy capital under construction.
+	|
+
+Energy Construction Delay[source] = 10
+	~	year
+	~	Time required to construct new energy capital (planning as well as \
+		physical construction and exploitation). Delay is unaffected by demand on \
+		the energy capital construction sectors, which are not explicitly modeled.
+	|
+
+Energy Supply Line Correction[source] = (Desired Energy Capital under Constr[source]
+-Energy Capital under Constr[source])/Supply Line Correction Time
+	~	$/year
+	~	Correction to supply line of capital under construction.
+	|
+
+Supply Line Correction Time = 4
+	~	year
+	~	Time to adjust supply line of capital under construction.
+	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Paramaters
+	|
+
+FINAL TIME  = 2100
+	~	year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 1960
+	~	year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 5
+	~	year
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.125
+	~	year
+	~	The time step for the simulation.
+	|
+
+********************************************************
+	.Data
+********************************************************~
+	|
+
+World Population
+	~	person
+	~	World Bank population data.
+	|
+
+Oil EIA
+	~	GJ/year
+	~	EIA oil production data/forecast.
+	|
+
+Primary Trabalka
+	~	GJ/year
+	~	Trabalka primary production data/forecast.
+	~	:SUPPLEMENTARY 
+	|
+
+OilGas EIA:=
+	Oil EIA+Gas EIA
+	~	GJ/year
+	~	EIA oil+gas production data/forecast.
+	~	:SUPPLEMENTARY 
+	|
+
+Primary WEC
+	~	GJ/year
+	~	WEC primary production data/forecast.
+	~	:SUPPLEMENTARY 
+	|
+
+Primary EIA
+	~	GJ/year
+	~	EIA primary production data/forecast.
+	~	:SUPPLEMENTARY 
+	|
+
+Coal EIA
+	~	GJ/year
+	~	EIA coal production data/forecast.
+	~	:SUPPLEMENTARY 
+	|
+
+Gas EIA
+	~	GJ/year
+	~	EIA gas production data/forecast.
+	|
+
+Share Data[source] := Production Data[source]/Total Production Data
+	~	dmnl
+	~	Energy production share data by source.
+	~	:SUPPLEMENTARY 
+	|
+
+Total Production Data := SUM(Production Data[source!])
+	~	GJ/year
+	~	Total energy production data (physical terms).
+	|
+
+Production Data[Coal] := Coal Production ~~|
+Production Data[OilGas] := Oil Production+Gas Production ~~|
+Production Data[HN] := Hydro Electricity+Nuclear Electricity ~~|
+Production Data[New] := Other Electricity
+	~	GJ/year
+	~	Production data array for all sources.
+	|
+
+Price Data[Coal] := World Coal Price ~~|
+Price Data[OilGas] := (World Crude Price*Oil Production+World Gas Price*Gas Production
+)/(Oil Production+Gas Production) ~~|
+Price Data[HN] := Elect Price ~~|
+Price Data[New] := 10*Elect Price
+	~	$/GJ
+	~	Price data array for all sources.
+	|
+
+Average Energy Price = (Average Thermal Price
+	*(Coal Production+Gas Production+Oil Production)
+	+Elect Price*Primary Electricity)
+	/(Coal Production+Gas Production+Oil Production+Primary Electricity)
+	~	$/GJ
+	~	Average price of energy in physical terms, from data. Electricity in \
+		primary equivalent units.
+	~	:SUPPLEMENTARY 
+	|
+
+Average Thermal Price = (Oil Production*World Crude Price+Coal Production*World Coal Price
++Gas Production*World Gas Price)/(Coal Production+Gas Production+Oil Production)
+	~	$/GJ
+	~	Average price of thermal fuels from data.
+	|
+
+Coal Production
+	~	GJ/year
+	~	Coal production data.
+	|
+
+Commercial Energy
+	~	GJ/year
+	~	Commercial energy data.
+	~	:SUPPLEMENTARY 
+	|
+
+Cons Frac GDP
+	~	dmnl
+	~	Consumption as a fraction of GDP (data).
+	~	:SUPPLEMENTARY 
+	|
+
+Elect Price
+	~	$/GJ
+	~	Electricity price data.
+	|
+
+Gas Production
+	~	GJ/year
+	~	Gas production data.
+	|
+
+GDP := World GDP*1e+09
+	~	$/year
+	~	GDP data.
+	~	:SUPPLEMENTARY 
+	|
+
+GDP Deflator
+	~	dmnl
+	~	GDP deflator data.
+	~	:SUPPLEMENTARY 
+	|
+
+Hydro Electricity
+	~	GJ/year
+	~	Hydro electricity data (primary equivalent units).
+	|
+
+Invest Frac GDP
+	~	dmnl
+	~	Investment as a fraction of GDP data.
+	|
+
+Nuclear Electricity
+	~	GJ/year
+	~	Nuclear electricity production data (primary equivalent units).
+	|
+
+Oil Production
+	~	GJ/year
+	~	Oil production data.
+	|
+
+Other Electricity
+	~	GJ/year
+	~	Other electricity production data (primary equivalent units).
+	|
+
+Primary Electricity = Hydro Electricity+Nuclear Electricity+Other Electricity
+	~	GJ/year
+	~	Primary electricity production data (primary equivalent units).
+	|
+
+Primary Energy
+	~	GJ/year
+	~	Total primary energy production data.
+	~	:SUPPLEMENTARY 
+	|
+
+Thermal Electricity
+	~	GJ/year
+	~	Thermal electricity production data (primary equivalent units).
+	~	:SUPPLEMENTARY 
+	|
+
+Total Electricity
+	~	GJ/year
+	~	Total electricity production data (primary equivalent units).
+	~	:SUPPLEMENTARY 
+	|
+
+Traditional Energy
+	~	GJ/year
+	~	Traditional energy production data.
+	~	:SUPPLEMENTARY 
+	|
+
+World Coal Price
+	~	$/GJ
+	~	Coal price data.
+	|
+
+World Crude Price
+	~	$/GJ
+	~	Oil price data.
+	|
+
+World Gas Price
+	~	$/GJ
+	~	Gas price data.
+	|
+
+World GDP
+	~	$/year
+	~	GDP data.
+	|
+
+World Investment = World GDP*Invest Frac GDP*1e+09
+	~	$/year
+	~	Investment data.
+	|
+
+World Pop Growth Rt
+	~	1/year
+	~	Population growth rate data.
+	~	:SUPPLEMENTARY 
+	|
+
+World Bank Population
+	:=World Population*1e+06
+	~	person
+	~	Population data (World Bank).
+	~	:SUPPLEMENTARY 
+	|
+
+DICE IPCC CO2 Rad Forcing
+	~	watt/(meter*meter)
+	~	IPCC CO2 radiative forcing (from DICE)
+	~	:SUPPLEMENTARY 
+	|
+
+DICE IPCC Other Rad Forcing
+	~	watt/(meter*meter)
+	~	IPCC other GHG radiative forcing (from DICE)
+	|
+
+CO2 Emissions A
+	~	TonC/year
+	~	IPCC 92a emissions
+	~	:SUPPLEMENTARY 
+	|
+
+CO2 Emissions B
+	~	TonC/year
+	~	IPCC 92b emissions
+	~	:SUPPLEMENTARY 
+	|
+
+CO2 Emissions C
+	~	TonC/year
+	~	IPCC 92c emissions
+	~	:SUPPLEMENTARY 
+	|
+
+CO2 Emissions D
+	~	TonC/year
+	~	IPCC 92d emissions
+	~	:SUPPLEMENTARY 
+	|
+
+CO2 Emissions E
+	~	TonC/year
+	~	IPCC 92e emissions
+	~	:SUPPLEMENTARY 
+	|
+
+Energy CO2 Emissions A
+	~	TonC/year
+	~	IPCC 92a energy emissions
+	~	:SUPPLEMENTARY 
+	|
+
+Energy CO2 Emissions B
+	~	TonC/year
+	~	IPCC 92b energy emissions
+	~	:SUPPLEMENTARY 
+	|
+
+Energy CO2 Emissions C
+	~	TonC/year
+	~	IPCC 92c energy emissions
+	~	:SUPPLEMENTARY 
+	|
+
+Energy CO2 Emissions D
+	~	TonC/year
+	~	IPCC 92d energy emissions
+	~	:SUPPLEMENTARY 
+	|
+
+CO2 Concentration A
+	~	TonC
+	~	IPCC 92a atmospheric concentration
+	~	:SUPPLEMENTARY 
+	|
+
+CO2 Concentration B
+	~	TonC
+	~	IPCC 92b atmospheric concentration
+	~	:SUPPLEMENTARY 
+	|
+
+CO2 Concentration C
+	~	TonC
+	~	IPCC 92c atmospheric concentration
+	~	:SUPPLEMENTARY 
+	|
+
+CO2 Concentration D
+	~	TonC
+	~	IPCC 92d atmospheric concentration
+	~	:SUPPLEMENTARY 
+	|
+
+CO2 Concentration E
+	~	TonC
+	~	IPCC 92e atmospheric concentration
+	~	:SUPPLEMENTARY 
+	|
+
+EMF Population
+	~	people
+	~	EMF-14 world population
+	~	:SUPPLEMENTARY 
+	|
+
+EMF GDP
+	~	$/year
+	~	EMF-14 world GDP
+	~	:SUPPLEMENTARY 
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Intro
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+12,1,0,267,171,98,49,8,4,0,0,-1,0,0,0
+FREE Model by Tom Fiddaman, 1997, documented in Feedback Complexity in Integrated Climate Economy Models, PhD Thesis, MIT Sloan School of Management.
+12,2,0,272,263,31,11,8,4,0,8,-1,0,0,0,0-0-0,0-0-0,|9||0-0-0
+Copyright 1997 Tom Fiddaman.
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Welfare
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Base Year,455,119,26,8,0,3,0,0,-1,0,0,0
+10,2,Population,357,192,35,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,3,Total Utility,249,150,32,8,0,3,0,0,-1,0,0,0
+10,4,Utility,251,182,18,8,0,3,0,0,-1,0,0,0
+10,5,Rate of Inequal Aversion,125,170,62,8,0,3,0,0,-1,0,0,0
+10,6,Log Discounted Marginal Utility,490,201,81,8,0,3,0,0,-1,0,0,0
+12,7,48,194,107,10,8,0,3,0,0,-1,0,0,0
+10,8,Rate of Time Pref,470,136,45,8,0,3,0,0,-1,0,0,0
+10,9,Discount Factor,377,137,41,8,0,3,0,0,-1,0,0,0
+10,10,Consumption per Cap,251,258,55,8,0,3,0,0,-1,0,0,0
+10,11,Cum Disc Utility,341,103,35,15,3,3,0,0,0,0,0,0
+10,12,Discounted Marginal Utility,606,235,70,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,13,Environmental Services per Cap,137,271,80,8,0,3,0,0,-1,0,0,0
+10,14,Time,453,152,21,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,Ref Utility,150,150,28,8,0,3,0,0,-1,0,0,0
+10,16,Ref Cons per Cap,113,192,45,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,17,Consumption,251,302,41,8,0,2,0,0,-1,0,0,0
+10,18,Share of Consumption,99,215,56,8,0,3,0,0,-1,0,0,0
+10,19,Equiv Consumption Index,251,217,66,8,0,3,0,0,-1,0,0,0
+10,20,Ref Envir Services per Cap,91,239,68,8,0,3,0,0,-1,0,0,0
+10,21,Marginal Equiv Consumption,515,335,74,8,0,3,0,0,-1,0,0,0
+10,22,Marginal Util Equiv Cons,389,336,65,8,0,3,0,0,-1,0,0,0
+10,23,Discount Factor,656,272,48,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,24,Equiv Consumption Index,449,368,72,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,25,Share of Consumption,585,367,63,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,26,Consumption per Cap,529,392,62,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,27,Ref Utility,338,369,35,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+11,28,2108,248,106,5,6,34,3,0,0,1,0,0,0
+10,29,Discounted Utility,248,118,47,8,32,3,0,0,-1,0,0,0
+10,30,Rate of Inequal Aversion,380,392,69,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,31,Climate Damage Effect,137,304,66,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,32,Marginal Utility,450,300,41,8,0,3,0,0,-1,0,0,0
+1,33,15,4,0,0,0,0,0,0,0,-1--1--1,,1|(197,164)|
+1,34,1,9,0,0,0,0,0,0,0,-1--1--1,,1|(426,125)|
+1,35,14,9,0,0,0,0,0,0,0,-1--1--1,,1|(431,147)|
+1,36,5,4,0,0,0,0,0,0,0,-1--1--1,,1|(203,176)|
+1,37,5,4,0,0,0,0,0,0,0,-1--1--1,,1|(203,176)|
+1,38,5,4,0,0,0,0,0,0,0,-1--1--1,,1|(203,176)|
+1,39,9,29,1,0,0,0,0,0,0,-1--1--1,,1|(305,137)|
+1,40,8,9,0,0,0,0,0,0,0,-1--1--1,,1|(428,136)|
+1,41,17,10,0,0,0,0,0,0,0,-1--1--1,,1|(251,287)|
+1,42,28,11,4,0,0,22,0,0,0,-1--1--1,,1|(279,106)|
+1,43,28,7,100,0,0,22,0,0,0,-1--1--1,,1|(223,106)|
+1,44,2,10,0,0,0,0,0,0,0,-1--1--1,,1|(309,221)|
+1,45,4,3,0,0,0,0,0,0,0,-1--1--1,,1|(250,172)|
+1,46,2,3,0,0,0,0,0,0,0,-1--1--1,,1|(309,173)|
+1,47,3,29,0,0,0,0,0,0,0,-1--1--1,,1|(248,140)|
+1,48,12,6,0,0,0,0,0,0,0,-1--1--1,,1|(554,219)|
+1,49,18,19,0,0,0,0,0,0,0,-1--1--1,,1|(163,215)|
+1,50,13,19,0,0,0,0,0,0,0,-1--1--1,,1|(187,246)|
+1,51,19,4,0,0,0,0,0,0,0,-1--1--1,,1|(251,206)|
+1,52,10,19,0,0,0,0,0,0,0,-1--1--1,,1|(251,244)|
+1,53,20,13,0,0,0,0,0,0,0,-1--1--1,,1|(107,251)|
+1,54,16,19,0,0,0,0,0,0,0,-1--1--1,,1|(174,203)|
+1,55,20,19,0,0,0,0,0,0,0,-1--1--1,,1|(163,228)|
+1,56,22,32,0,0,0,0,0,0,0,-1--1--1,,1|(412,321)|
+1,57,21,32,0,0,0,0,0,0,0,-1--1--1,,1|(488,320)|
+1,58,32,12,0,0,0,0,0,0,0,-1--1--1,,1|(521,270)|
+1,59,24,22,0,0,0,0,0,0,0,-1--1--1,,1|(425,355)|
+1,60,30,22,0,0,0,0,0,0,0,-1--1--1,,1|(382,370)|
+1,61,27,22,0,0,0,0,0,0,0,-1--1--1,,1|(357,356)|
+1,62,26,21,0,0,0,0,0,0,0,-1--1--1,,1|(523,370)|
+1,63,24,21,0,0,0,0,0,0,0,-1--1--1,,1|(475,354)|
+1,64,25,21,0,0,0,0,0,0,0,-1--1--1,,1|(556,353)|
+1,65,23,12,0,0,0,0,0,0,0,-1--1--1,,1|(636,257)|
+1,66,31,13,0,0,0,0,0,0,0,-1--1--1,,1|(137,294)|
+10,69,Discounted Marginal Utility Init,597,160,52,14,8,3,0,0,0,0,0,0
+1,70,69,6,0,0,0,0,0,64,0,-1--1--1,,1|(542,181)|
+1,71,12,69,0,0,0,0,0,64,0,-1--1--1,,1|(603,207)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Constrained Utility
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Discounted Utility,299,106,49,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,2,Effective CO2 in Atmosphere,126,108,76,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,3,CO2 Constraint Factor,67,136,55,8,0,3,0,0,-1,0,0,0
+10,4,Constraint Violation Cost,139,204,59,8,0,3,0,0,-1,0,0,0
+10,5,CO2 Constraint,156,153,38,8,0,3,0,0,-1,0,0,0
+10,6,Preindustrial CO2,74,172,50,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Constraint Violation Penalty,269,152,65,8,0,3,0,0,-1,0,0,0
+10,8,Net Discounted Utility,403,152,52,8,0,3,0,0,-1,0,0,0
+1,9,5,7,0,0,0,0,0,0,0,-1--1--1,,1|(194,153)|
+1,10,2,7,0,0,0,0,0,0,0,-1--1--1,,1|(191,128)|
+1,11,7,8,0,0,0,0,0,0,0,-1--1--1,,1|(337,152)|
+1,12,4,7,0,0,0,0,0,0,0,-1--1--1,,1|(198,180)|
+1,13,1,8,0,0,0,0,0,0,0,-1--1--1,,1|(345,127)|
+1,14,3,5,0,0,0,0,0,0,1,-1--1--1,,1|(108,143)|
+1,15,6,5,0,0,0,0,0,0,1,-1--1--1,,1|(109,164)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Population
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Population,185,93,30,15,3,3,0,0,0,0,0,0
+10,2,Pop Growth Rate,278,161,30,15,3,3,0,0,0,0,0,0
+10,3,Hist Pop Growth Rt Decline Rt,327,263,77,8,0,3,0,0,-1,0,0,0
+10,4,Pop Gr Rt Decline Rt,401,210,54,8,0,3,0,0,-1,0,0,0
+12,5,48,328,94,10,8,0,3,0,0,-1,0,0,0
+10,6,Forecast Pop Growth Rt Decline Rt,404,293,88,8,0,3,0,0,-1,0,0,0
+12,7,48,437,160,10,8,0,3,0,0,-1,0,0,0
+10,8,Pop Growth Switch Time,464,263,63,8,0,3,0,0,-1,0,0,0
+11,9,5132,269,94,5,6,34,3,0,0,1,0,0,0
+10,10,Net Pop Incr,269,106,33,8,32,3,0,0,-1,0,0,0
+11,11,5244,369,160,5,6,34,3,0,0,1,0,0,0
+10,12,Decline Pop Gr Rt,369,172,47,8,32,3,0,0,-1,0,0,0
+10,13,Time,485,235,21,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Labor Force,104,94,32,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,15,Labor Force Fraction,103,142,53,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+1,16,1,14,0,0,0,0,0,0,0,-1--1--1,,1|(152,93)|
+1,17,15,14,0,0,0,0,0,0,0,-1--1--1,,1|(103,125)|
+1,18,13,4,0,0,0,0,0,0,0,-1--1--1,,1|(452,225)|
+1,19,8,4,0,0,0,0,0,0,0,-1--1--1,,1|(437,240)|
+1,20,6,4,0,0,0,0,0,0,0,-1--1--1,,1|(402,258)|
+1,21,3,4,0,0,0,0,0,0,0,-1--1--1,,1|(357,240)|
+1,22,11,2,100,0,0,22,0,0,0,-1--1--1,,1|(336,160)|
+1,23,11,7,4,0,0,22,0,0,0,-1--1--1,,1|(400,160)|
+1,24,9,5,100,0,0,22,0,0,0,-1--1--1,,1|(296,94)|
+1,25,9,1,4,0,0,22,0,0,0,-1--1--1,,1|(239,94)|
+1,26,4,12,0,0,0,0,0,0,0,-1--1--1,,1|(389,196)|
+1,27,2,12,1,0,0,0,0,0,0,-1--1--1,,1|(320,187)|
+1,28,2,10,0,0,0,0,0,0,0,-1--1--1,,1|(274,137)|
+1,29,1,10,1,0,0,0,0,0,0,-1--1--1,,1|(221,120)|
+10,30,Initial Population,185,28,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,31,30,1,0,0,0,0,0,0,1,-1--1--1,,1|(185,53)|
+10,32,Initial Pop Growth Rt,277,222,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,33,32,2,0,0,0,0,0,0,1,-1--1--1,,1|(277,198)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Interest
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Output Trend,290,208,29,6,0,3,0,0,-1,0,0,0
+10,2,Output Trend Establishment Time,151,200,68,6,0,3,0,0,-1,0,0,0
+10,3,Consumer Inequal Aversion,161,174,54,6,0,3,0,0,-1,0,0,0
+10,4,Consumer Discount Rate,164,143,50,6,0,3,0,0,-1,0,0,0
+10,5,Interest Rate,290,105,26,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,6,Hist Output Growth Rate,158,222,58,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Perceived Output per Cap,290,254,53,6,0,3,0,0,-1,0,0,0
+10,8,Output Perc Time,162,254,37,6,0,3,0,0,-1,0,0,0
+10,9,Const Interest Rate,173,116,39,6,0,3,0,0,-1,0,0,0
+10,10,Interest Rate Switch,166,89,41,6,0,3,0,0,-1,0,0,0
+10,11,Ramsey Interest Rate,290,159,43,6,0,3,0,0,-1,0,0,0
+10,12,Gross Output per Cap,289,296,47,6,0,3,0,0,-1,0,0,0
+10,13,Gross Output,257,336,34,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Population,326,335,27,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,15,3,11,0,0,0,0,0,0,0,-1--1--1,,1|(224,166)|
+1,16,4,11,0,0,0,0,0,0,0,-1--1--1,,1|(224,150)|
+1,17,10,5,0,0,0,0,0,0,0,-1--1--1,,1|(230,97)|
+1,18,9,5,0,0,0,0,0,0,0,-1--1--1,,1|(233,110)|
+1,19,11,5,0,0,0,0,0,0,0,-1--1--1,,1|(290,137)|
+1,20,1,11,0,0,0,0,0,0,0,-1--1--1,,1|(290,188)|
+1,21,8,7,0,0,0,0,0,0,0,-1--1--1,,1|(213,254)|
+1,22,7,1,0,0,0,0,0,0,0,-1--1--1,,1|(290,236)|
+1,23,6,1,0,0,0,0,0,0,0,-1--1--1,,1|(233,214)|
+1,24,2,1,0,0,0,0,0,0,0,-1--1--1,,1|(235,204)|
+1,25,14,12,0,0,0,0,0,0,0,-1--1--1,,1|(311,319)|
+1,26,12,7,0,0,0,0,0,0,0,-1--1--1,,1|(289,280)|
+1,27,13,12,0,0,0,0,0,0,0,-1--1--1,,1|(269,320)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Goods Allocation
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Indicated Energy Distribution Cost,301,114,65,6,0,3,0,0,-1,0,0,0
+10,2,Energy Invest Req,443,126,35,6,0,3,0,0,-1,0,0,0
+10,3,Init Unit Distribution Cost,247,80,56,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,4,Scheduled Production,356,80,46,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,5,Indicated Total Energy Dist Cost,302,149,62,6,0,3,0,0,-1,0,0,0
+10,6,Desired Variable Input,164,115,48,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Indicated Total Cost Energy Production,236,179,74,6,0,3,0,0,-1,0,0,0
+10,8,Indicated Total Energy Variable Cost,162,150,68,6,0,3,0,0,-1,0,0,0
+10,9,Output Net of Energy,234,236,42,6,0,3,0,0,-1,0,0,0
+10,10,Fraction of Energy Goods Avail,141,206,59,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,11,Total Invest Req,444,174,32,6,0,3,0,0,-1,0,0,0
+10,12,Desired Investment,544,127,42,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,13,Consumption,445,236,26,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,14,Fraction of Invest Goods Avail,355,206,58,6,0,3,0,0,-1,0,0,0
+10,15,Indicated Energy Capital Completion Rate,507,82,83,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,16,Gross Output,44,236,32,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,17,11,13,0,0,0,0,0,0,0,-1--1--1,,1|(444,200)|
+1,18,11,14,0,0,0,0,0,0,0,-1--1--1,,1|(404,188)|
+1,19,9,14,0,0,0,0,0,0,0,-1--1--1,,1|(289,222)|
+1,20,9,13,0,0,0,0,0,0,0,-1--1--1,,1|(342,236)|
+1,21,2,11,0,0,0,0,0,0,0,-1--1--1,,1|(443,145)|
+1,22,12,11,0,0,0,0,0,0,0,-1--1--1,,1|(498,148)|
+1,23,7,9,0,0,0,0,0,0,0,-1--1--1,,1|(235,202)|
+1,24,16,10,0,0,0,0,0,0,0,-1--1--1,,1|(87,223)|
+1,25,16,9,0,0,0,0,0,0,0,-1--1--1,,1|(128,236)|
+1,26,7,10,0,0,0,0,0,0,0,-1--1--1,,1|(194,191)|
+1,27,6,8,0,0,0,0,0,0,0,-1--1--1,,1|(163,127)|
+1,28,5,7,0,0,0,0,0,0,0,-1--1--1,,1|(274,162)|
+1,29,8,7,0,0,0,0,0,0,0,-1--1--1,,1|(194,162)|
+1,30,1,5,0,0,0,0,0,0,0,-1--1--1,,1|(301,126)|
+1,31,4,1,0,0,0,0,0,0,0,-1--1--1,,1|(332,94)|
+1,32,3,1,0,0,0,0,0,0,0,-1--1--1,,1|(269,94)|
+1,33,15,2,0,0,0,0,0,0,0,-1--1--1,,1|(479,101)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Gross Output
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Climate Damage Effect,205,110,66,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,2,Labor Force,148,135,39,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,3,Gross Output,315,185,34,8,0,3,0,0,-1,0,0,0
+10,4,Factor Productivity,308,109,56,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,5,Marg Prod Oper Capital,469,188,60,8,0,3,0,0,-1,0,0,0
+10,6,Marginal Prod of Labor,147,187,59,8,0,3,0,0,-1,0,0,0
+10,7,Reference Labor,257,95,49,8,0,2,0,0,-1,0,0,0
+10,8,Operating Capital,470,142,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,9,Reference Output,347,95,45,8,0,3,0,0,-1,0,0,0
+10,10,Value Share of Labor,314,235,53,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+1,11,10,6,0,0,0,0,0,0,0,-1--1--1,,1|(237,212)|
+1,12,7,3,0,0,0,0,0,0,0,-1--1--1,,1|(281,134)|
+1,13,10,3,0,0,0,0,0,0,0,-1--1--1,,1|(314,217)|
+1,14,9,3,0,0,0,0,0,0,0,-1--1--1,,1|(333,133)|
+1,15,4,3,0,0,0,0,0,0,0,-1--1--1,,1|(310,140)|
+1,16,8,3,0,0,0,0,0,0,0,-1--1--1,,1|(399,161)|
+1,17,8,5,0,0,0,0,0,0,0,-1--1--1,,1|(469,158)|
+1,18,3,6,0,0,0,0,0,0,0,-1--1--1,,1|(250,185)|
+1,19,3,5,0,0,0,0,0,0,0,-1--1--1,,1|(372,185)|
+1,20,10,5,0,0,0,0,0,0,0,-1--1--1,,1|(384,213)|
+1,21,2,3,0,0,0,0,0,0,0,-1--1--1,,1|(224,157)|
+1,22,2,6,0,0,0,0,0,0,0,-1--1--1,,1|(147,154)|
+1,23,1,3,0,0,0,0,0,0,0,-1--1--1,,1|(253,143)|
+10,24,Reference Operating Capital,461,92,45,14,8,3,0,0,0,0,0,0
+10,25,Reference Operating Ratio,576,31,45,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,26,25,24,0,0,0,0,0,64,1,-1--1--1,,1|(524,58)|
+10,27,Reference Capital'Energy Aggr,607,93,56,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,28,27,24,0,0,0,0,0,64,1,-1--1--1,,1|(535,92)|
+1,29,24,3,0,0,0,0,0,64,0,-1--1--1,,1|(389,137)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Factor Productivity
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Init Frac Factor Prod Gr Rt,440,244,65,8,0,3,0,0,-1,0,0,0
+10,2,Asymptotic Frac Factor Prod Gr Rt,96,287,83,8,0,3,0,0,-1,0,0,0
+10,3,Fractional Factor Prod Growth Rate,293,243,30,15,3,3,0,0,0,0,0,0
+12,4,48,275,178,6,6,0,3,0,0,-1,0,0,0
+11,5,48,323,178,5,6,34,3,0,0,1,0,0,0
+10,6,Factor Prod Chg Rt,323,190,47,8,32,3,0,0,-1,0,0,0
+10,7,Initial Factor Productivity,511,178,65,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,Factor Productivity,403,178,26,14,3,3,0,0,0,0,0,0
+12,9,48,141,242,6,6,0,3,0,0,-1,0,0,0
+11,10,48,197,242,5,6,34,3,0,0,1,0,0,0
+10,11,Factor Prod Gr Rt Decline Rt,197,254,69,8,32,3,0,0,-1,0,0,0
+10,12,Frac Factor Prod Gr Rt Decline Rt,161,308,81,8,0,3,0,0,-1,0,0,0
+1,13,5,8,4,0,0,22,0,0,0,-1--1--1,,1|(352,178)|
+1,14,5,4,100,0,0,22,0,0,0,-1--1--1,,1|(300,178)|
+1,15,8,6,1,0,0,0,0,0,0,-1--1--1,,1|(356,205)|
+1,16,10,9,4,0,0,22,0,0,0,-1--1--1,,1|(170,242)|
+1,17,10,3,100,0,0,22,0,0,0,-1--1--1,,1|(232,242)|
+1,18,12,11,0,0,0,0,0,0,0,-1--1--1,,1|(176,285)|
+1,19,3,11,1,0,0,0,0,0,0,-1--1--1,,1|(236,275)|
+1,20,2,11,0,0,0,0,0,0,0,-1--1--1,,1|(140,272)|
+1,21,3,6,1,0,0,0,0,0,0,-1--1--1,,1|(301,212)|
+1,22,1,3,0,0,0,0,0,0,1,-1--1--1,,1|(353,243)|
+1,23,7,8,0,0,0,0,0,0,1,-1--1--1,,1|(443,178)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Capital
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Capital,377,233,30,15,3,3,0,0,0,0,0,0
+12,2,48,242,232,10,8,0,3,0,0,-1,0,0,0
+11,3,48,298,232,5,6,34,3,0,0,1,0,0,0
+10,4,Investment Rate,298,244,41,8,32,3,0,0,0,0,0,0
+12,5,48,536,234,10,8,0,3,0,0,-1,0,0,0
+11,6,48,472,233,5,6,34,3,0,0,1,0,0,0
+10,7,Discard Rate,472,245,33,8,32,3,0,0,0,0,0,0
+10,8,Desired Capital,383,103,40,8,0,3,0,0,-1,0,0,0
+10,9,Capital Correction,157,73,47,8,0,3,0,0,-1,0,0,0
+10,10,Desired Investment,190,245,49,8,0,3,0,0,-1,0,0,0
+10,12,Capital Lifetime,530,278,49,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,13,Cost of Capital,516,24,39,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,14,Desired Capital Order Rate,39,245,68,8,0,3,0,0,-1,0,0,0
+10,15,Marg Prod Capital,640,130,47,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,16,Fraction of Invest Goods Avail,297,288,83,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,17,Capital Lifetime,406,4,49,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,18,Interest Rate,408,34,40,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,19,Capital Energy Subst Coeff,752,152,75,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,20,Perc Relative Return to Capital,579,70,77,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,21,Effect of Return,446,71,41,8,0,3,0,0,-1,0,0,0
+10,23,Return Coeff,510,115,40,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,24,Reference Capital,465,176,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,25,World Investment,123,275,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,26,Investment Switch,173,290,47,8,0,3,0,0,-1,0,0,0
+10,27,Return Perc Time,620,25,51,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,29,Normal Aggr Energy Requirement,741,234,92,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,30,Capital Corr Time,287,41,53,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,31,Ref Aggr Energy Production,807,197,78,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,32,Desired Capital Growth,176,124,60,8,0,3,0,0,-1,0,0,0
+10,33,Gross Output,160,198,41,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,34,Hist Output Growth Rate,275,198,70,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,35,Reference Capital,693,250,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,36,LR Output Trend Time,207,212,57,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,37,LR Expected Output Growth Rate,208,161,84,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,39,Utilization,784,123,35,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,40,Marg Capital'Energy per Capital,566,201,80,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+1,41,36,37,0,0,0,0,0,0,0,-1--1--1,,1|(207,193)|
+1,42,30,9,1,0,0,0,0,0,0,-1--1--1,,1|(205,53)|
+1,43,8,9,1,0,0,0,0,0,0,-1--1--1,,1|(294,65)|
+1,44,6,5,4,0,0,22,0,0,0,-1--1--1,,1|(501,233)|
+1,45,6,1,100,0,0,22,0,0,0,-1--1--1,,1|(437,233)|
+1,46,1,7,1,0,0,0,0,0,0,-1--1--1,,1|(417,259)|
+1,47,12,7,0,0,0,0,0,0,0,-1--1--1,,1|(507,264)|
+1,48,3,1,4,0,0,22,0,0,0,-1--1--1,,1|(325,232)|
+1,49,3,2,100,0,0,22,0,0,0,-1--1--1,,1|(272,232)|
+1,50,10,4,0,0,0,0,0,0,0,-1--1--1,,1|(241,244)|
+1,51,9,14,1,0,0,0,0,0,0,-1--1--1,,1|(49,157)|
+1,52,14,10,0,0,0,0,0,0,0,-1--1--1,,1|(117,245)|
+1,53,20,21,1,0,0,0,0,0,0,-1--1--1,,1|(506,59)|
+1,54,23,21,1,0,0,0,0,0,0,-1--1--1,,1|(485,92)|
+1,55,21,8,1,0,0,0,0,0,0,-1--1--1,,1|(410,83)|
+1,56,7,14,1,0,0,0,0,0,0,-1--1--1,,1|(239,379)|
+1,57,16,4,0,0,0,0,0,0,0,-1--1--1,,1|(297,273)|
+1,58,26,10,0,0,0,0,0,0,0,-1--1--1,,1|(178,274)|
+1,59,25,10,0,0,0,0,0,0,0,-1--1--1,,1|(149,262)|
+1,60,13,20,0,0,0,0,0,0,0,-1--1--1,,1|(541,42)|
+1,61,17,13,0,0,0,0,0,0,0,-1--1--1,,1|(456,12)|
+1,62,18,13,0,0,0,0,0,0,0,-1--1--1,,1|(455,29)|
+1,64,27,20,0,0,0,0,0,0,0,-1--1--1,,1|(604,42)|
+1,65,37,32,0,0,0,0,0,0,0,-1--1--1,,1|(196,147)|
+1,66,32,14,1,0,0,0,0,0,0,-1--1--1,,1|(81,156)|
+1,67,33,37,0,0,0,0,0,0,0,-1--1--1,,1|(177,183)|
+1,68,34,37,0,0,0,0,0,0,0,-1--1--1,,1|(247,182)|
+1,69,39,15,0,0,0,0,0,0,0,-1--1--1,,1|(724,125)|
+1,70,40,15,1,0,0,0,0,0,0,-1--1--1,,1|(616,173)|
+1,71,15,20,1,0,0,0,0,0,0,-1--1--1,,1|(620,98)|
+1,72,1,40,1,0,0,0,0,0,0,-1--1--1,,1|(459,222)|
+1,73,19,40,0,0,0,0,0,0,0,-1--1--1,,1|(665,174)|
+1,75,29,40,0,0,0,0,0,0,0,-1--1--1,,1|(660,218)|
+1,76,31,40,0,0,0,0,0,0,0,-1--1--1,,1|(694,198)|
+1,77,35,40,0,0,0,0,0,0,0,-1--1--1,,1|(636,228)|
+1,79,1,9,1,0,0,0,0,0,0,-1--1--1,,1|(332,142)|
+1,80,1,32,1,0,0,0,0,0,0,-1--1--1,,1|(282,143)|
+1,81,1,8,1,0,0,0,0,0,0,-1--1--1,,1|(402,146)|
+1,82,7,10,1,0,0,2,0,0,0,-1--1--1,,1|(315,326)|
+1,84,24,1,0,0,0,0,0,0,1,-1--1--1,,1|(432,197)|
+10,85,LR Energy Share,799,214,51,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,86,85,40,0,0,0,0,0,64,0,-1--1--1,,1|(703,208)|
+10,87,LR Capital Share,773,175,51,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,88,87,40,0,0,0,0,0,64,0,-1--1--1,,1|(682,186)|
+10,89,Reference Capital'Energy Aggr,630,263,56,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,90,89,40,0,0,0,0,0,64,0,-1--1--1,,1|(600,233)|
+10,91,LR Marginal Prod of Eff Capital,760,84,50,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,92,91,15,0,0,0,0,0,64,0,-1--1--1,,1|(698,107)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*AEEI
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Capital,489,56,26,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+12,2,48,232,156,10,8,0,3,0,0,-1,0,0,0
+11,3,48,297,156,5,6,34,3,0,0,1,0,0,0
+10,4,AEEI Install Rate,297,168,45,8,32,3,0,0,-1,0,0,0
+10,5,Investment Rate,200,204,48,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+12,6,48,382,280,10,8,0,3,0,0,-1,0,0,0
+10,7,Capital,381,46,26,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,Embodied AEEI,382,156,30,15,3,3,0,0,0,0,0,0
+10,9,Retrofit Rate,517,249,40,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+11,10,1100,382,222,6,5,33,3,0,0,4,0,0,0
+10,11,AEEI Retrofit Rate,427,222,49,8,32,3,0,0,-1,0,0,0
+10,12,Capital,446,269,26,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,13,Asymptotic AEEI,295,326,45,8,0,3,0,0,-1,0,0,0
+12,14,48,557,155,10,8,0,3,0,0,-1,0,0,0
+11,15,48,483,154,5,6,34,3,0,0,1,0,0,0
+10,16,AEEI Discard Rate,483,166,49,8,32,3,0,0,0,0,0,0
+10,17,Capital Lifetime,530,207,42,8,0,3,0,0,-1,0,0,0
+10,19,Frac Auton Energy Eff Improvement Rate,120,346,103,8,0,3,0,0,-1,0,0,0
+10,20,Auton Energy Eff Index,270,261,30,15,3,3,0,0,0,0,0,0
+12,21,48,103,266,10,8,0,3,0,0,-1,0,0,0
+11,22,48,171,266,5,6,34,3,0,0,1,0,0,0
+10,23,Auton Energy Eff Improvement,171,278,79,8,32,3,0,0,-1,0,0,0
+1,24,20,23,1,0,0,0,0,0,0,-1--1--1,,1|(226,298)|
+1,25,22,21,68,0,0,22,0,0,0,-1--1--1,,1|(139,266)|
+1,26,22,20,36,0,0,22,0,0,0,-1--1--1,,1|(208,266)|
+1,27,17,16,1,0,0,0,0,0,0,-1--1--1,,1|(511,188)|
+1,28,15,14,4,0,0,22,0,0,0,-1--1--1,,1|(517,154)|
+1,29,5,4,0,0,0,0,0,0,0,-1--1--1,,1|(241,188)|
+1,30,3,2,100,0,0,22,0,0,0,-1--1--1,,1|(267,156)|
+1,31,3,8,4,0,0,22,0,0,0,-1--1--1,,1|(327,156)|
+1,32,8,16,1,0,0,0,0,0,0,-1--1--1,,1|(436,186)|
+1,33,15,8,36,0,0,22,0,0,0,-1--1--1,,1|(445,154)|
+1,34,20,4,1,0,0,0,0,0,0,-1--1--1,,1|(272,216)|
+1,35,19,23,0,0,0,0,0,0,0,-1--1--1,,1|(141,317)|
+1,36,10,6,4,0,0,22,0,0,0,-1--1--1,,1|(382,249)|
+1,37,10,8,68,0,0,22,0,0,0,-1--1--1,,1|(382,194)|
+1,38,8,11,1,0,0,0,0,0,0,-1--1--1,,1|(410,189)|
+1,39,20,10,1,0,0,0,0,0,0,-1--1--1,,1|(314,237)|
+1,40,9,11,0,0,0,0,0,0,0,-1--1--1,,1|(478,237)|
+1,41,12,11,0,0,0,0,0,0,0,-1--1--1,,1|(439,251)|
+1,42,13,23,1,0,0,0,0,0,0,-1--1--1,,1|(197,303)|
+1,43,20,8,0,0,0,0,0,0,1,-1--1--1,,1|(320,213)|
+10,44,Capital,473,101,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,45,44,8,0,0,0,0,0,0,1,-1--1--1,,1|(433,124)|
+10,46,Average AEEI,374,87,37,8,8,3,0,0,0,0,0,0
+1,47,7,46,0,0,0,0,0,64,0,-1--1--1,,1|(378,59)|
+1,48,8,46,0,0,0,0,0,64,0,-1--1--1,,1|(378,124)|
+10,49,LR Energy Share,228,103,44,8,8,3,0,0,0,0,0,0
+1,50,46,49,0,0,0,0,0,64,0,-1--1--1,,1|(311,93)|
+10,51,Ref Total Expenditure,83,89,35,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,52,51,49,0,0,0,0,0,64,0,-1--1--1,,1|(144,94)|
+10,53,Value Share of Labor,123,53,41,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,54,53,49,0,0,0,0,0,64,0,-1--1--1,,1|(175,77)|
+10,55,Reference Output,229,51,51,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,56,55,49,0,0,0,0,0,64,0,-1--1--1,,1|(228,70)|
+10,57,LR Capital Share,103,175,44,8,8,3,0,0,0,0,0,0
+1,58,49,57,0,0,0,0,0,64,0,-1--1--1,,1|(171,135)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Energy Intensity
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Initial Energy Requirement,590,500,75,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,2,LR Marginal Prod of Energy,431,139,71,8,0,3,0,0,-1,0,0,0
+10,3,Energy Intensity Adj Coeff,244,115,67,8,0,3,0,0,-1,0,0,0
+10,4,Ref Energy Value Share,656,300,67,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+12,5,48,422,429,10,8,0,3,0,0,-1,0,0,0
+11,6,48,423,387,6,5,33,3,0,0,4,0,0,0
+10,7,Energy Req Retrofit Rate,480,387,63,8,32,3,0,0,-1,0,0,0
+10,8,Adj Energy Intensity,284,155,52,8,0,3,0,0,-1,0,0,0
+10,9,Planned Energy Intensity,196,354,63,8,0,3,0,0,-1,0,0,0
+10,10,Energy Intensity Adjustment Time,77,315,85,8,0,3,0,0,-1,0,0,0
+10,11,LR Expected Energy Price,336,98,73,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,12,Investment Rate,308,368,48,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,13,Capital Lifetime,585,360,49,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Ref Aggr Energy Production,641,154,78,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,Total Normal Energy Expenditure,797,60,84,8,0,3,0,0,-1,0,0,0
+10,16,Normal Energy Expenditure,790,335,70,8,0,3,0,0,-1,0,0,0
+10,17,Normal Aggr Energy Price,461,-33,67,8,0,3,0,0,-1,0,0,0
+10,18,Desired Energy Intensity,153,281,62,8,0,3,0,0,-1,0,0,0
+10,19,Total Adj Energy Intensity,161,169,66,8,0,3,0,0,-1,0,0,0
+10,20,Aggr Energy Intensity Effect,112,83,72,8,0,3,0,0,-1,0,0,0
+10,21,Desired Share,160,218,36,8,0,3,0,0,-1,0,0,0
+10,22,Energy Subst Coeff,573,115,56,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,23,Aggr Intensity Adj Coeff,115,4,62,8,0,3,0,0,-1,0,0,0
+10,24,LR Expected Energy Price,824,386,73,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,25,Reference Production,702,277,61,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,26,Aggr Energy Input,566,269,47,8,0,3,0,0,-1,0,0,0
+10,27,Total Aggr Energy Input,596,223,61,8,0,3,0,0,-1,0,0,0
+10,28,Normal Aggr Energy Requirement,707,84,85,8,0,3,0,0,-1,0,0,0
+10,29,Marginal Aggr Energy per Energy,499,188,84,8,0,3,0,0,-1,0,0,0
+10,30,Reference Production,617,128,61,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,31,Retrofit Rate,463,445,40,8,0,2,0,0,-1,0,0,0
+10,32,LR Marginal Productivity of Aggr Energy,360,63,103,8,0,3,0,0,-1,0,0,0
+10,33,Energy Requirement,419,310,30,15,3,3,0,0,0,0,0,0
+12,34,48,260,310,10,8,0,3,0,0,-1,0,0,0
+11,35,48,325,310,5,6,34,3,0,0,1,0,0,0
+10,36,Energy Req Install Rate,325,322,60,8,32,3,0,0,0,0,0,0
+12,37,48,573,310,10,8,0,3,0,0,-1,0,0,0
+11,38,48,517,310,5,6,34,3,0,0,1,0,0,0
+10,39,Energy Req Discard Rate,517,322,63,8,32,3,0,0,0,0,0,0
+10,40,Capital,525,437,26,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,41,Energy Intensity of Capital,402,220,67,8,0,3,0,0,-1,0,0,0
+10,42,Capital,305,197,26,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,43,Marg Capital'Energy per Aggr Energy,540,45,100,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,44,Energy Subst Coeff,728,231,56,8,0,2,0,2,-1,0,0,0,-1--1--1,0-0-0,|12||128-128-128
+10,45,Ref Energy Value Share,529,103,67,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,46,Total Energy Requirement,345,259,66,8,0,3,0,0,-1,0,0,0
+10,47,Total Energy Intensity,259,227,56,8,0,3,0,0,-1,0,0,0
+1,48,33,39,1,0,0,0,0,0,0,-1--1--1,,1|(464,334)|
+1,49,38,33,100,0,0,22,0,0,0,-1--1--1,,1|(480,310)|
+1,50,38,37,4,0,0,22,0,0,0,-1--1--1,,1|(542,310)|
+1,51,35,34,100,0,0,22,0,0,0,-1--1--1,,1|(295,310)|
+1,52,35,33,4,0,0,22,0,0,0,-1--1--1,,1|(359,310)|
+1,53,13,39,0,0,0,0,0,0,0,-1--1--1,,1|(557,344)|
+1,54,12,36,1,0,0,0,0,0,0,-1--1--1,,1|(320,349)|
+1,55,32,2,1,0,0,0,0,0,0,-1--1--1,,1|(394,87)|
+1,56,2,8,1,0,0,0,0,0,0,-1--1--1,,1|(335,145)|
+1,57,11,8,1,0,0,0,0,0,0,-1--1--1,,1|(315,130)|
+1,58,33,26,1,0,0,0,0,0,0,-1--1--1,,1|(496,295)|
+1,59,25,26,0,0,0,0,0,0,0,-1--1--1,,1|(633,273)|
+1,60,44,26,1,0,0,0,0,0,0,-1--1--1,,1|(657,257)|
+1,61,26,27,1,0,0,0,0,0,0,-1--1--1,,1|(589,245)|
+1,62,27,28,1,0,0,0,0,0,0,-1--1--1,,1|(695,178)|
+1,63,14,28,1,0,0,0,0,0,0,-1--1--1,,1|(674,124)|
+1,64,44,28,1,0,0,0,0,0,0,-1--1--1,,1|(740,152)|
+1,65,27,29,1,0,0,0,0,0,0,-1--1--1,,1|(578,202)|
+1,66,45,29,0,0,0,0,0,0,0,-1--1--1,,1|(516,138)|
+1,67,14,29,0,0,0,0,0,0,0,-1--1--1,,1|(576,169)|
+1,68,33,29,1,0,0,0,0,0,0,-1--1--1,,1|(478,252)|
+1,69,22,29,0,0,0,0,0,0,0,-1--1--1,,1|(540,146)|
+1,70,30,29,0,0,0,0,0,0,0,-1--1--1,,1|(564,154)|
+1,71,42,41,0,0,0,0,0,0,0,-1--1--1,,1|(342,205)|
+1,72,33,41,1,0,0,0,0,0,0,-1--1--1,,1|(428,274)|
+1,73,29,2,1,0,0,0,0,0,0,-1--1--1,,1|(482,158)|
+1,74,43,32,1,0,0,0,0,0,0,-1--1--1,,1|(437,46)|
+1,75,41,8,1,0,0,0,0,0,0,-1--1--1,,1|(350,182)|
+1,76,33,46,1,0,0,0,0,0,0,-1--1--1,,1|(371,283)|
+1,77,42,47,0,0,0,0,0,0,0,-1--1--1,,1|(287,208)|
+1,78,46,47,1,0,0,0,0,0,0,-1--1--1,,1|(325,241)|
+1,79,3,8,1,0,0,0,0,0,0,-1--1--1,,1|(270,133)|
+1,80,4,26,0,0,0,0,0,0,0,-1--1--1,,1|(617,286)|
+1,81,6,5,4,0,0,22,0,0,0,-1--1--1,,1|(423,406)|
+1,82,6,33,68,0,0,22,0,0,0,-1--1--1,,1|(423,353)|
+1,83,33,7,1,0,0,0,0,0,0,-1--1--1,,1|(464,356)|
+1,84,10,9,1,0,0,0,0,0,0,-1--1--1,,1|(119,337)|
+1,85,9,36,1,0,0,0,0,0,0,-1--1--1,,1|(278,349)|
+1,86,9,6,1,0,0,0,0,0,0,-1--1--1,,1|(305,394)|
+1,87,28,17,1,0,0,0,0,0,0,-1--1--1,,1|(645,24)|
+1,88,33,16,1,0,0,0,0,0,0,-1--1--1,,1|(560,381)|
+1,89,16,15,1,0,0,0,0,0,0,-1--1--1,,1|(828,199)|
+1,90,15,17,1,0,0,0,0,0,0,-1--1--1,,1|(644,-33)|
+1,91,18,9,1,0,0,0,0,0,0,-1--1--1,,1|(166,313)|
+1,92,8,19,1,0,0,0,0,0,0,-1--1--1,,1|(215,154)|
+1,93,47,18,1,0,0,0,0,0,0,-1--1--1,,1|(191,244)|
+1,94,32,20,1,0,0,0,0,0,0,-1--1--1,,1|(230,51)|
+1,95,17,20,1,0,0,0,0,0,0,-1--1--1,,1|(238,4)|
+1,96,20,18,1,0,0,0,0,0,0,-1--1--1,,1|(98,177)|
+1,97,19,21,1,0,0,0,0,0,0,-1--1--1,,1|(156,190)|
+1,98,8,21,1,0,0,0,0,0,0,-1--1--1,,1|(223,178)|
+1,99,21,18,1,0,0,0,0,0,0,-1--1--1,,1|(152,241)|
+1,100,23,20,1,0,0,0,0,0,0,-1--1--1,,1|(108,39)|
+1,101,24,16,0,0,0,0,0,0,0,-1--1--1,,1|(810,366)|
+1,102,31,7,1,0,0,0,0,0,0,-1--1--1,,1|(477,416)|
+1,103,40,7,1,0,0,0,0,0,0,-1--1--1,,1|(510,410)|
+10,104,Energy Adj Coeff,223,79,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,105,104,3,0,0,0,0,0,0,1,-1--1--1,,1|(231,94)|
+10,106,Energy Subst Elast,128,135,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,107,106,3,0,0,0,0,0,0,1,-1--1--1,,1|(170,127)|
+10,108,Capital Energy Subst Elast,207,-11,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,109,108,23,0,0,0,0,0,0,1,-1--1--1,,1|(177,-7)|
+10,110,Energy Adj Coeff,44,30,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,111,110,23,0,0,0,0,0,0,1,-1--1--1,,1|(77,18)|
+10,112,Initial Energy Requirement,381,362,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,113,112,33,0,0,0,0,0,0,1,-1--1--1,,1|(395,342)|
+10,114,Reference Productivity,181,474,58,8,8,3,0,0,0,0,0,0
+10,115,Reference Capital'Energy Aggr,129,427,52,14,8,3,0,0,0,0,0,0
+1,116,114,115,0,0,0,0,0,64,1,-1--1--1,,1|(163,458)|
+10,117,Reference Capital,256,424,52,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,118,117,115,0,0,0,0,0,64,1,-1--1--1,,1|(199,425)|
+10,119,LR Marginal Prod of Eff Capital,153,537,47,14,8,3,0,0,0,0,0,0
+10,120,Marg Prod Oper Capital,282,533,45,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,121,120,119,0,0,0,0,0,64,0,-1--1--1,,1|(225,534)|
+1,122,115,119,1,0,0,0,0,64,0,-1--1--1,,1|(65,491)|
+10,123,LR Marginal Prod of Eff Capital,382,8,50,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,124,123,32,0,0,0,0,0,64,0,-1--1--1,,1|(372,31)|
+10,125,Reference Operating Capital,227,496,49,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,126,125,119,0,0,0,0,0,64,0,-1--1--1,,1|(196,513)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Utilization
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Normal Aggr Energy Requirement,388,34,92,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+12,2,0,248,173,5,5,2,7,0,0,1,0,0,0
+ 
+10,3,Operating Capital,585,120,45,8,0,3,0,0,-1,0,0,0
+10,4,SR Aggr Energy Value Share,600,214,72,8,0,3,0,0,-1,0,0,0
+10,5,Normal Aggr Energy Requirement,270,119,92,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,6,SR Aggr Energy,348,71,49,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Capital,211,468,26,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,Normal Capital'Energy Aggr,329,174,71,8,0,3,0,0,-1,0,0,0
+10,9,Capital Energy Subst Coeff,189,387,75,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Normal Aggr Energy Requirement,410,506,92,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,11,Ref Aggr Energy Production,612,415,78,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,12,SR Elast Coeff,522,24,38,8,0,3,0,0,-1,0,0,0
+10,13,Reference Capital,239,415,52,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Capital,152,202,26,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,Capital Energy Subst Coeff,156,229,75,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,16,Ref Aggr Energy Production,125,148,78,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,17,Reference Capital,162,130,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,18,SR Elasticity,519,-17,34,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,19,Utilization,583,73,28,8,0,3,0,0,-1,0,0,0
+10,20,Operating Coeff,454,73,41,8,0,3,0,0,-1,0,0,0
+10,21,Marg Capital'Energy per Aggr Energy,413,364,94,8,0,3,0,0,-1,0,0,0
+1,22,12,20,0,0,0,0,0,0,0,-1--1--1,,1|(493,43)|
+1,23,4,20,0,0,0,0,0,0,0,-1--1--1,,1|(532,148)|
+1,24,21,4,0,0,0,0,0,0,0,-1--1--1,,1|(500,293)|
+1,25,8,4,0,0,0,0,0,0,0,-1--1--1,,1|(457,192)|
+1,26,20,19,0,0,0,0,0,0,0,-1--1--1,,1|(518,73)|
+1,27,19,3,0,0,0,0,0,0,0,-1--1--1,,1|(583,89)|
+1,28,12,19,0,0,0,0,0,0,0,-1--1--1,,1|(546,43)|
+1,29,8,3,0,0,0,0,0,0,0,-1--1--1,,1|(449,148)|
+1,30,15,2,0,0,0,0,0,0,0,-1--1--1,,1|(200,201)|
+1,31,14,2,0,0,0,0,0,0,0,-1--1--1,,1|(203,186)|
+1,32,16,2,0,0,0,0,0,0,0,-1--1--1,,1|(196,162)|
+1,33,17,2,0,0,0,0,0,0,0,-1--1--1,,1|(204,150)|
+1,34,5,2,0,0,0,0,0,0,0,-1--1--1,,1|(260,141)|
+1,35,5,4,0,0,0,0,0,0,0,-1--1--1,,1|(427,164)|
+1,36,1,20,0,0,0,0,0,0,0,-1--1--1,,1|(414,49)|
+1,37,6,20,0,0,0,0,0,0,0,-1--1--1,,1|(398,71)|
+1,38,7,21,0,1,0,0,0,0,0,-1--1--1,,1|(305,419)|
+1,39,9,21,0,1,0,0,0,0,0,-1--1--1,,1|(292,376)|
+1,40,10,21,0,1,0,0,0,0,0,-1--1--1,,1|(410,441)|
+1,41,11,21,0,1,0,0,0,0,0,-1--1--1,,1|(519,391)|
+1,42,13,21,0,1,0,0,0,0,0,-1--1--1,,1|(318,391)|
+1,43,18,12,0,0,0,0,0,64,1,-1--1--1,,1|(519,-3)|
+10,44,LR Energy Share,363,303,51,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,45,44,8,0,0,0,0,0,64,0,-1--1--1,,1|(347,245)|
+10,46,LR Energy Share,323,462,51,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,47,46,21,0,0,0,0,0,64,0,-1--1--1,,1|(362,418)|
+10,48,Normal Aggr Energy Requirement,481,245,57,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,49,48,8,0,0,0,0,0,64,0,-1--1--1,,1|(405,209)|
+10,50,Ref Aggr Energy Production,422,273,47,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,51,50,8,0,0,0,0,0,64,0,-1--1--1,,1|(377,225)|
+10,52,Reference Capital,280,276,52,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,53,52,8,0,0,0,0,0,64,0,-1--1--1,,1|(300,231)|
+10,54,Capital,478,217,26,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,55,54,8,0,0,0,0,0,64,0,-1--1--1,,1|(410,197)|
+10,56,Capital Energy Subst Coeff,180,257,42,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,57,56,8,0,0,0,0,0,64,0,-1--1--1,,1|(253,216)|
+10,58,LR Capital Share,278,312,51,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,59,58,8,0,0,0,0,0,64,0,-1--1--1,,1|(300,249)|
+10,60,LR Capital Share,632,373,51,8,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,61,60,21,0,0,0,0,0,64,0,-1--1--1,,1|(550,369)|
+10,62,Reference Capital'Energy Aggr,486,459,56,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,63,62,21,0,0,0,0,0,64,0,-1--1--1,,1|(451,414)|
+10,64,Reference Capital'Energy Aggr,640,157,56,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,65,64,3,0,0,0,0,0,64,0,-1--1--1,,1|(613,139)|
+10,66,Reference Capital'Energy Aggr,257,250,56,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,67,66,8,0,0,0,0,0,64,0,-1--1--1,,1|(290,214)|
+10,68,Reference Operating Capital,732,106,49,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,69,68,3,0,0,0,0,0,64,0,-1--1--1,,1|(663,111)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Energy Input
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Energy Requirement,444,117,59,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,2,Energy Delivery,654,153,49,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,3,SR Energy Value Share,375,131,65,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,4,Marg Prod Oper Capital,137,275,67,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,5,SR Marg Prod Aggr Energy,322,266,69,8,0,3,0,0,-1,0,0,0
+10,6,SR Energy Subst Coeff,383,34,65,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,SR Energy Value Share,271,51,65,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,SR Marg Prod Energy,507,218,56,8,0,3,0,0,-1,0,0,0
+10,9,Normal Aggr Energy Requirement,404,197,92,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Energy Requirement,498,51,59,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,11,Indicated Energy Order Rate,654,221,71,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,12,SR Aggr Energy Value Share,126,254,79,8,0,2,0,2,-1,0,0,0,-1--1--1,0-0-0,|12||128-128-128
+10,13,Normal Capital'Energy Aggr,225,372,78,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Normal Aggr Energy Requirement,140,227,92,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,SR Energy Subst Coeff,363,173,65,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,16,Operating Coeff,429,338,48,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,17,Energy Order Adj Coeff,610,287,60,8,0,3,0,0,-1,0,0,0
+10,19,SR Elast Coeff,335,330,38,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,20,SR Expected Energy Price,788,286,73,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,21,SR Aggr Energy Input,376,74,56,8,0,3,0,0,-1,0,0,0
+10,22,SR Total Aggr Energy Input,250,149,70,8,0,3,0,0,-1,0,0,0
+10,23,SR Aggr Energy,241,205,42,8,0,3,0,0,-1,0,0,0
+10,24,SR Marg Aggr Energy per Energy,507,153,84,8,0,3,0,0,-1,0,0,0
+10,25,SR Energy Subst Elast,93,149,57,8,0,3,0,0,-1,0,0,0
+10,26,SR Energy Subst Coeff,100,183,58,8,0,3,0,0,-1,0,0,0
+1,27,21,22,1,0,0,0,0,0,0,-1--1--1,,1|(302,100)|
+1,28,22,23,1,0,0,0,0,0,0,-1--1--1,,1|(238,172)|
+1,29,22,24,0,0,0,0,0,0,0,-1--1--1,,1|(364,150)|
+1,30,16,5,0,0,0,0,0,0,0,-1--1--1,,1|(381,305)|
+1,31,19,5,0,0,0,0,0,0,0,-1--1--1,,1|(330,304)|
+1,32,12,5,0,0,0,0,0,0,0,-1--1--1,,1|(222,259)|
+1,33,4,5,0,0,0,0,0,0,0,-1--1--1,,1|(221,270)|
+1,35,13,5,0,0,0,0,0,0,0,-1--1--1,,1|(268,324)|
+1,36,2,21,1,0,0,0,0,0,0,-1--1--1,,1|(530,95)|
+1,37,26,23,1,0,0,0,0,0,0,-1--1--1,,1|(168,193)|
+1,38,3,24,0,0,0,0,0,0,0,-1--1--1,,1|(434,140)|
+1,39,9,24,0,0,0,0,0,0,0,-1--1--1,,1|(448,177)|
+1,40,1,24,0,0,0,0,0,0,0,-1--1--1,,1|(469,131)|
+1,41,2,24,1,0,0,0,0,0,0,-1--1--1,,1|(573,137)|
+1,42,23,5,1,0,0,0,0,0,0,-1--1--1,,1|(263,234)|
+1,43,24,8,1,0,0,0,0,0,0,-1--1--1,,1|(498,179)|
+1,44,5,8,1,0,0,0,0,0,0,-1--1--1,,1|(429,252)|
+1,45,8,11,1,0,0,0,0,0,0,-1--1--1,,1|(562,239)|
+1,46,2,11,1,0,0,0,0,0,0,-1--1--1,,1|(661,179)|
+1,47,15,24,0,0,0,0,0,0,0,-1--1--1,,1|(427,163)|
+1,48,17,11,0,0,0,0,0,0,0,-1--1--1,,1|(627,259)|
+1,49,20,11,0,0,0,0,0,0,0,-1--1--1,,1|(727,256)|
+1,50,14,23,0,0,0,0,0,0,0,-1--1--1,,1|(183,217)|
+1,51,14,5,0,0,0,0,0,0,0,-1--1--1,,1|(223,245)|
+1,52,6,21,0,0,0,0,0,0,0,-1--1--1,,1|(380,47)|
+1,53,10,21,0,0,0,0,0,0,0,-1--1--1,,1|(443,61)|
+1,54,7,21,0,0,0,0,0,0,0,-1--1--1,,1|(316,61)|
+10,55,SR Elasticity,340,375,41,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,56,55,19,0,0,0,0,0,0,1,-1--1--1,,1|(338,359)|
+1,57,25,26,0,0,0,0,0,0,1,-1--1--1,,1|(94,159)|
+10,58,Reference Capital'Energy Aggr,479,309,56,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,59,58,5,0,0,0,0,0,64,0,-1--1--1,,1|(396,286)|
+10,60,Reference Operating Capital,188,316,49,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,61,60,5,0,0,0,0,0,64,0,-1--1--1,,1|(255,290)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Energy Technology
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Energy Technology,460,161,49,8,0,3,0,0,0,0,0,0
+10,2,Hist Energy Growth Rate,568,319,63,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,3,Autonomous Technology,253,96,30,15,3,3,0,0,0,0,0,0
+12,4,48,109,96,10,8,0,3,0,0,-1,0,0,0
+10,5,Energy Production,93,351,54,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,6,Energy Capital Completion Rate,274,295,87,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Init Cum Energy Investment,370,264,71,8,0,3,0,0,-1,0,0,0
+10,8,Energy Capital Completion Rate,246,321,87,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+12,9,48,53,248,10,8,0,3,0,0,-1,0,0,0
+10,10,Technology Data,422,108,43,8,0,3,0,0,-1,0,0,0
+10,11,Initial Production Growth,296,345,71,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,12,Tech Data Switch,497,109,45,8,0,3,0,0,-1,0,0,0
+10,13,Energy Learning Coeff,160,201,58,8,0,3,0,0,-1,0,0,0
+10,14,Energy Learning Rate,56,201,55,8,0,3,0,0,-1,0,0,0
+11,15,7724,165,97,5,6,34,3,0,0,1,0,0,0
+10,16,Auton Energy Tech Chg Rt,165,109,68,8,32,3,0,0,0,0,0,0
+10,17,Energy Scale Economy,441,203,58,8,0,3,0,0,-1,0,0,0
+10,18,Endogenous Tech Fraction,176,146,66,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,19,Energy Capital Lifetime,572,362,67,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,20,Low Lim Energy Tech,182,175,56,8,0,3,0,0,-1,0,0,0
+10,21,Energy Capital,452,240,45,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,22,Auton Energy Tech Growth Rate,17,109,81,8,0,3,0,0,-1,0,0,0
+11,23,7708,112,260,5,6,34,3,0,0,1,0,0,0
+10,24,Energy Capital Completion Rate,112,274,87,8,32,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,25,Reference Energy Capital,541,239,71,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,26,Energy Scale Coeff,552,203,49,8,0,3,0,0,-1,0,0,0
+10,27,Energy Scale Effect,666,203,50,8,0,3,0,0,-1,0,0,0
+10,28,Cumulative Energy Investment,236,248,30,15,3,3,0,0,0,0,0,0
+10,29,Induced Energy Technology,319,201,70,8,0,3,0,0,-1,0,0,0
+10,30,Indicated Energy Technology,332,161,73,8,0,3,0,0,0,0,0,0
+1,31,28,29,0,0,0,0,0,0,0,-1--1--1,,1|(276,224)|
+1,32,15,3,4,0,0,22,0,0,0,-1--1--1,,1|(196,97)|
+1,33,15,4,100,0,0,22,0,0,0,-1--1--1,,1|(139,97)|
+1,34,22,16,0,0,0,0,0,0,0,-1--1--1,,1|(90,109)|
+1,35,3,16,1,0,0,0,0,0,0,-1--1--1,,1|(206,128)|
+1,36,23,28,4,0,0,22,0,0,0,-1--1--1,,1|(161,260)|
+1,37,23,9,100,0,0,22,0,0,0,-1--1--1,,1|(112,248)|
+1,38,13,29,0,0,0,0,0,0,0,-1--1--1,,1|(226,201)|
+1,39,7,29,0,0,0,0,0,0,0,-1--1--1,,1|(348,237)|
+1,40,12,1,0,0,0,0,0,0,0,-1--1--1,,1|(482,129)|
+1,41,10,1,0,0,0,0,0,0,0,-1--1--1,,1|(436,128)|
+1,42,21,17,0,0,0,0,0,0,0,-1--1--1,,1|(448,228)|
+1,43,25,17,0,0,0,0,0,0,0,-1--1--1,,1|(497,223)|
+1,44,26,17,0,0,0,0,0,0,0,-1--1--1,,1|(508,203)|
+1,45,3,30,0,0,0,0,0,0,0,-1--1--1,,1|(291,127)|
+1,46,18,30,0,0,0,0,0,0,0,-1--1--1,,1|(243,152)|
+1,47,29,30,0,0,0,0,0,0,0,-1--1--1,,1|(322,187)|
+1,48,20,30,0,0,0,0,0,0,0,-1--1--1,,1|(241,169)|
+1,49,30,1,0,0,0,0,0,0,0,-1--1--1,,1|(401,161)|
+1,50,17,30,0,0,0,0,0,0,0,-1--1--1,,1|(393,184)|
+10,51,Energy Capital,543,290,45,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,52,51,7,0,0,0,0,0,0,1,-1--1--1,,1|(467,279)|
+1,53,19,7,0,0,0,0,0,0,1,-1--1--1,,1|(477,316)|
+1,54,2,7,0,0,0,0,0,0,1,-1--1--1,,1|(475,293)|
+1,55,14,13,0,0,0,0,0,0,1,-1--1--1,,1|(99,201)|
+1,56,27,26,0,0,0,0,0,0,1,-1--1--1,,1|(615,203)|
+1,57,7,28,0,0,0,0,0,0,1,-1--1--1,,1|(291,254)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Depletion
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Fraction Consumed,242,254,49,8,0,3,0,0,-1,0,0,0
+10,2,Energy Capacity Utilization,383,459,76,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,3,Init Resource Remaining,580,298,62,8,0,3,0,0,-1,0,0,0
+10,4,Marginal Resource Effect,97,145,71,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,5,Resource Effect,446,201,41,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,6,Energy Capital,210,128,45,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Energy Production,210,438,54,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,Resource Share,539,220,40,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,9,Saturation Coeff,636,111,49,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Normal Production,337,215,48,8,0,3,0,0,-1,0,0,0
+10,11,Energy Capital,712,142,45,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,12,Initial Production,703,191,51,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,13,Energy Technology,408,83,56,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Reference Energy Capital,267,82,71,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,Initial Production,213,213,51,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,16,Normal Effective Capital Intensity,341,56,85,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,17,Energy Technology,674,36,56,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,18,Min Depletion Time,723,214,51,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,19,Reference Resource,717,241,50,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,20,Resource Ratio,461,245,39,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,21,Marginal Resource Effect,480,149,64,8,0,3,0,0,-1,0,0,0
+10,22,Resource Remaining,460,299,30,15,3,3,0,0,0,0,0,0
+10,23,Capital Share,287,30,42,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,24,Relative Variable Intensity,342,13,73,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,25,Cumulative Production,242,300,30,15,3,3,0,0,0,0,0,0
+10,26,Saturation Elasticity,625,263,51,8,0,3,0,0,-1,0,0,0
+11,27,6476,352,302,5,6,34,3,0,0,1,0,0,0
+10,28,Energy Production,352,314,47,8,32,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,29,Initial Resource,91,245,40,8,0,3,0,0,-1,0,0,0
+10,30,Init Cum Prod,143,302,37,8,0,3,0,0,-1,0,0,0
+10,31,Normal Effective Energy Capital Ratio,342,131,96,8,0,3,0,0,-1,0,0,0
+1,32,15,10,0,0,0,0,0,0,0,-1--1--1,,1|(269,213)|
+1,33,27,25,4,0,0,22,0,0,0,-1--1--1,,1|(309,302)|
+1,34,27,22,100,0,0,22,0,0,0,-1--1--1,,1|(393,302)|
+1,35,31,10,1,0,0,0,0,0,0,-1--1--1,,1|(335,167)|
+1,36,5,10,1,0,0,0,0,0,0,-1--1--1,,1|(384,191)|
+1,37,6,31,0,0,0,0,0,0,0,-1--1--1,,1|(243,128)|
+1,38,13,31,0,0,0,0,0,0,0,-1--1--1,,1|(380,102)|
+1,39,14,31,0,0,0,0,0,0,0,-1--1--1,,1|(298,102)|
+1,40,16,31,0,0,0,0,0,0,0,-1--1--1,,1|(341,86)|
+1,41,25,1,0,0,0,0,0,0,0,-1--1--1,,1|(242,280)|
+1,42,29,1,0,0,0,0,0,0,0,-1--1--1,,1|(155,248)|
+1,43,10,27,1,0,0,0,0,0,0,-1--1--1,,1|(334,258)|
+1,44,2,28,0,0,0,0,0,0,0,-1--1--1,,1|(369,393)|
+1,45,31,5,1,0,0,0,0,0,0,-1--1--1,,1|(395,158)|
+1,46,8,5,1,0,0,0,0,0,0,-1--1--1,,1|(503,206)|
+1,47,9,5,1,0,0,0,0,0,0,-1--1--1,,1|(533,137)|
+1,48,20,5,1,0,0,0,0,0,0,-1--1--1,,1|(459,227)|
+1,49,3,20,0,0,0,0,0,0,0,-1--1--1,,1|(526,274)|
+1,50,22,20,1,0,0,0,0,0,0,-1--1--1,,1|(464,270)|
+1,51,31,21,1,0,0,0,0,0,0,-1--1--1,,1|(440,135)|
+1,52,8,21,1,0,0,0,0,0,0,-1--1--1,,1|(519,182)|
+1,53,9,21,1,0,0,0,0,0,0,-1--1--1,,1|(580,103)|
+1,54,5,21,1,0,0,0,0,0,0,-1--1--1,,1|(457,178)|
+1,55,23,16,0,0,0,0,0,0,0,-1--1--1,,1|(307,39)|
+1,56,24,16,0,0,0,0,0,0,0,-1--1--1,,1|(341,27)|
+1,57,20,21,1,0,0,0,0,0,0,-1--1--1,,1|(484,206)|
+1,58,30,3,1,0,0,0,0,0,1,-1--1--1,,1|(341,344)|
+1,59,29,3,1,0,0,0,0,0,1,-1--1--1,,1|(316,232)|
+1,60,3,8,0,0,0,0,0,0,1,-1--1--1,,1|(562,265)|
+1,61,12,8,0,0,0,0,0,0,1,-1--1--1,,1|(625,204)|
+1,62,18,8,0,0,0,0,0,0,1,-1--1--1,,1|(632,216)|
+1,63,19,8,0,0,0,0,0,0,1,-1--1--1,,1|(629,230)|
+1,64,9,8,0,0,0,0,0,0,1,-1--1--1,,1|(592,160)|
+1,65,3,22,0,0,0,0,0,0,1,-1--1--1,,1|(511,298)|
+1,66,30,25,0,0,0,0,0,0,1,-1--1--1,,1|(189,301)|
+10,67,Hist Energy Growth Rate,187,367,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,68,67,30,0,0,0,0,0,0,1,-1--1--1,,1|(166,336)|
+10,69,Initial Production,111,364,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,70,69,30,0,0,0,0,0,0,1,-1--1--1,,1|(124,335)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Energy Capital
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Energy Capital,417,194,30,15,3,3,0,0,0,0,0,0
+10,2,Energy Capital under Constr,220,194,30,15,3,3,0,0,0,0,0,0
+11,3,7948,320,191,5,6,34,3,0,0,1,0,0,0
+10,4,Energy Capital Completion Rate,320,212,30,15,104,3,0,0,0,0,0,0
+12,5,48,554,195,6,6,0,3,0,0,-1,0,0,0
+11,6,48,516,196,5,6,34,3,0,0,1,0,0,0
+10,7,Energy Capital Discard Rate,516,208,66,8,32,3,0,0,0,0,0,0
+12,8,48,92,197,6,6,0,3,0,0,-1,0,0,0
+11,9,48,132,197,5,6,34,3,0,0,1,0,0,0
+10,10,Energy Capital Order Rate,132,209,62,8,32,3,0,0,0,0,0,0
+10,11,Energy Construction Delay,245,137,62,8,0,3,0,0,-1,0,0,0
+10,12,Energy Capital Lifetime,632,185,55,8,0,3,0,0,-1,0,0,0
+10,13,Desired Energy Capital Order Rate,116,282,82,8,0,3,0,0,-1,0,0,0
+10,14,Energy Supply Line Correction,96,146,72,8,0,3,0,0,-1,0,0,0
+10,15,Desired Energy Capital under Constr,338,119,86,8,0,3,0,0,-1,0,0,0
+10,16,Energy Capital Correction,202,335,61,8,0,3,0,0,-1,0,0,0
+10,17,Desired Energy Capital,355,356,54,8,0,3,0,0,-1,0,0,0
+10,18,Supply Line Correction Time,155,92,68,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,19,Capital Corr Time,271,386,43,8,0,3,0,0,-1,0,0,0
+10,20,Energy Capital Cost,581,244,47,8,0,3,0,0,-1,0,0,0
+10,21,Indicated Energy Capital Completion Rate,302,161,98,8,0,3,0,0,-1,0,0,0
+10,22,Energy Order Rate,563,437,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,23,Reference Energy Capital,404,198,66,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,24,Normal Production,581,405,52,8,0,2,0,0,-1,0,0,0
+10,25,Energy Order Rate,331,57,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,26,LR Marg Prod Effect,799,302,57,8,0,2,0,0,-1,0,0,0
+10,27,Marg Prod Energy Capital,676,310,62,8,0,3,0,0,-1,0,0,0
+10,28,Perc Relative Return,556,296,48,8,0,3,0,0,-1,0,0,0
+10,29,Effect of Return on Energy Capital,502,337,80,8,0,3,0,0,-1,0,0,0
+10,30,Exog Energy Price Switch,620,377,68,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,31,Production Pressure,433,404,47,8,0,3,0,0,-1,0,0,0
+10,32,Capital Share,737,278,39,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,33,Effective Primary Energy Price,797,329,77,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,34,Return Coeff,635,353,38,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,35,Initial Production Growth,389,32,65,8,0,2,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,36,Return Perc Time,656,253,41,8,0,3,0,0,-1,0,0,0
+10,37,LR Order Trend Time,458,57,52,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,38,Interest Rate,669,212,38,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,39,Fraction of Invest Goods Avail,257,249,78,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,40,Depletion Rent,749,351,42,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,41,LR Expected Order Growth Rate,390,89,78,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+1,42,19,16,1,0,0,0,0,0,0,-1--1--1,,1|(230,363)|
+1,43,18,14,0,0,0,0,0,0,0,-1--1--1,,1|(131,116)|
+1,44,7,13,1,0,0,0,0,0,0,-1--1--1,,1|(320,299)|
+1,45,16,13,1,0,0,0,0,0,0,-1--1--1,,1|(147,308)|
+1,46,17,16,1,0,0,0,0,0,0,-1--1--1,,1|(269,353)|
+1,47,14,13,1,0,0,0,0,0,0,-1--1--1,,1|(64,210)|
+1,48,15,14,1,0,0,0,0,0,0,-1--1--1,,1|(191,124)|
+1,49,2,14,1,0,0,0,0,0,0,-1--1--1,,1|(182,161)|
+1,50,11,15,1,0,0,0,0,0,0,-1--1--1,,1|(316,134)|
+1,51,13,10,1,0,0,0,0,0,0,-1--1--1,,1|(109,251)|
+1,52,12,7,1,0,0,0,0,0,0,-1--1--1,,1|(590,201)|
+1,53,9,8,100,0,0,22,0,0,0,-1--1--1,,1|(113,197)|
+1,54,9,2,4,0,0,22,0,0,0,-1--1--1,,1|(164,197)|
+1,55,6,5,4,0,0,22,0,0,0,-1--1--1,,1|(534,196)|
+1,56,3,2,100,0,0,22,0,0,0,-1--1--1,,1|(283,191)|
+1,57,3,1,4,0,0,22,0,0,0,-1--1--1,,1|(356,191)|
+1,58,1,7,1,0,0,0,0,0,0,-1--1--1,,1|(449,220)|
+1,59,6,1,36,0,0,22,0,0,0,-1--1--1,,1|(479,196)|
+1,60,1,16,1,0,0,0,0,0,0,-1--1--1,,1|(340,302)|
+1,61,1,17,1,0,0,0,0,0,0,-1--1--1,,1|(407,284)|
+1,62,28,29,1,0,0,0,0,0,0,-1--1--1,,1|(545,309)|
+1,63,34,29,1,0,0,0,0,0,0,-1--1--1,,1|(573,351)|
+1,64,31,17,1,0,0,0,0,0,0,-1--1--1,,1|(395,386)|
+1,65,24,31,1,0,0,0,0,0,0,-1--1--1,,1|(518,414)|
+1,66,36,28,0,0,0,0,0,0,0,-1--1--1,,1|(611,272)|
+1,67,41,15,0,0,0,0,0,0,0,-1--1--1,,1|(368,101)|
+1,68,1,15,1,0,0,0,0,0,0,-1--1--1,,1|(388,146)|
+1,69,29,17,1,0,0,0,0,0,0,-1--1--1,,1|(448,353)|
+1,70,12,20,1,0,0,0,0,0,0,-1--1--1,,1|(602,208)|
+1,71,38,20,1,0,0,0,0,0,0,-1--1--1,,1|(625,220)|
+1,72,20,28,1,0,0,0,0,0,0,-1--1--1,,1|(570,272)|
+1,73,6,15,1,0,0,0,0,0,0,-1--1--1,,1|(464,140)|
+1,74,22,31,1,0,0,0,0,0,0,-1--1--1,,1|(483,429)|
+1,75,35,41,0,0,0,0,0,0,0,-1--1--1,,1|(389,56)|
+1,76,37,41,0,0,0,0,0,0,0,-1--1--1,,1|(428,71)|
+1,77,25,41,0,0,0,0,0,0,0,-1--1--1,,1|(355,71)|
+1,78,26,27,0,0,0,0,0,0,0,-1--1--1,,1|(745,305)|
+1,79,27,28,0,0,0,0,0,0,0,-1--1--1,,1|(614,302)|
+1,80,33,27,0,0,0,0,0,0,0,-1--1--1,,1|(741,320)|
+1,81,2,21,1,0,0,0,0,0,0,-1--1--1,,1|(261,173)|
+1,82,11,21,0,0,0,0,0,0,0,-1--1--1,,1|(269,146)|
+1,83,21,3,0,0,0,0,0,0,0,-1--1--1,,1|(309,173)|
+1,84,39,4,1,0,0,0,0,0,0,-1--1--1,,1|(294,234)|
+1,85,30,29,1,0,0,0,0,0,0,-1--1--1,,1|(550,362)|
+1,86,40,27,0,0,0,0,0,0,0,-1--1--1,,1|(716,332)|
+1,87,32,27,0,0,0,0,0,0,0,-1--1--1,,1|(710,291)|
+10,88,Reference Energy Capital,530,124,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,89,88,1,0,0,0,0,0,0,1,-1--1--1,,1|(477,156)|
+1,90,15,2,1,0,0,0,0,0,1,-1--1--1,,1|(251,147)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Energy Production
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Fraction of Energy Goods Avail,303,146,65,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,2,Resource Share,59,135,35,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,3,Capital Share,53,65,31,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,4,Energy Production,434,184,35,6,0,3,0,0,-1,0,0,0
+10,5,Saturation Coeff,56,167,37,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,6,Resource Ratio,41,218,35,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Capital Share,63,316,26,6,0,3,0,0,-1,0,0,0
+10,8,Energy Capacity Utilization,302,182,53,6,0,3,0,0,-1,0,0,0
+10,9,Desired Eff Energy Capital Ratio,170,249,62,6,0,3,0,0,-1,0,0,0
+10,10,Energy Delivery,541,186,32,6,0,3,0,0,-1,0,0,0
+10,11,Energy Order Rate,31,182,41,6,0,2,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,12,Energy Delivery Delay,586,139,49,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,13,Desired Variable Input,173,317,43,6,0,3,0,0,-1,0,0,0
+10,14,Initial Production,493,139,38,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,Normal Variable Cost,173,376,41,6,0,3,0,0,-1,0,0,0
+10,16,Initial Production,42,255,38,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,17,Relative Variable Intensity,41,395,55,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,18,Energy Technology,303,307,42,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,19,Relative Variable Intensity,28,82,55,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,20,Initial Production,60,151,38,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,21,Reference Variable Cost,311,328,50,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,22,Resource Ratio,56,121,35,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,23,Resource Share,43,236,35,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,24,Saturation Coeff,44,272,37,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,25,Energy Capital,310,114,34,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,26,Energy Technology,317,98,42,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,27,Reference Energy Capital,323,129,53,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,28,Max Production,171,144,31,6,0,3,0,0,-1,0,0,0
+10,29,Max Input Ratio,170,41,32,6,0,3,0,0,-1,0,0,0
+10,30,Normal Production,366,232,41,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,31,Total Energy Production,506,231,47,6,0,3,0,0,-1,0,0,0
+10,32,Scheduled Production,170,182,41,6,0,3,0,0,-1,0,0,0
+10,33,Reference Variable Cost,311,395,50,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,34,Energy Capital,300,350,34,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,35,Reference Energy Capital,39,348,53,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,36,Max Effective Capital Intensity,170,75,59,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,37,Max Effective Energy Capital Ratio,173,113,66,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+1,38,11,32,0,0,0,0,0,0,0,-1--1--1,,1|(95,182)|
+1,39,28,32,0,0,0,0,0,0,0,-1--1--1,,1|(170,158)|
+1,40,4,31,0,0,0,0,0,0,0,-1--1--1,,1|(465,204)|
+1,41,12,10,0,0,0,0,0,0,0,-1--1--1,,1|(566,158)|
+1,42,4,10,0,0,0,0,0,0,0,-1--1--1,,1|(483,184)|
+1,43,14,10,0,0,0,0,0,0,0,-1--1--1,,1|(512,158)|
+1,44,34,15,0,0,0,0,0,0,0,-1--1--1,,1|(241,362)|
+1,45,35,15,0,0,0,0,0,0,0,-1--1--1,,1|(100,361)|
+1,46,33,15,0,0,0,0,0,0,0,-1--1--1,,1|(245,385)|
+1,47,17,15,0,0,0,0,0,0,0,-1--1--1,,1|(102,386)|
+1,48,30,8,0,0,0,0,0,0,0,-1--1--1,,1|(338,210)|
+1,49,30,4,0,0,0,0,0,0,0,-1--1--1,,1|(395,211)|
+1,50,32,8,0,0,0,0,0,0,0,-1--1--1,,1|(224,182)|
+1,51,1,8,0,0,0,0,0,0,0,-1--1--1,,1|(302,158)|
+1,52,8,4,0,0,0,0,0,0,0,-1--1--1,,1|(371,182)|
+1,53,29,36,0,0,0,0,0,0,0,-1--1--1,,1|(170,53)|
+1,54,36,37,0,0,0,0,0,0,0,-1--1--1,,1|(170,89)|
+1,55,37,28,0,0,0,0,0,0,0,-1--1--1,,1|(172,123)|
+1,56,22,28,0,0,0,0,0,0,0,-1--1--1,,1|(108,131)|
+1,57,25,37,0,0,0,0,0,0,0,-1--1--1,,1|(262,113)|
+1,58,26,37,0,0,0,0,0,0,0,-1--1--1,,1|(257,104)|
+1,59,27,37,0,0,0,0,0,0,0,-1--1--1,,1|(254,122)|
+1,60,3,36,0,0,0,0,0,0,0,-1--1--1,,1|(92,68)|
+1,61,32,9,0,0,0,0,0,0,0,-1--1--1,,1|(170,210)|
+1,62,9,13,0,0,0,0,0,0,0,-1--1--1,,1|(170,278)|
+1,63,16,9,0,0,0,0,0,0,0,-1--1--1,,1|(89,253)|
+1,64,23,9,0,0,0,0,0,0,0,-1--1--1,,1|(88,240)|
+1,65,24,9,0,0,0,0,0,0,0,-1--1--1,,1|(101,261)|
+1,66,7,13,0,0,0,0,0,0,0,-1--1--1,,1|(104,316)|
+1,67,35,13,0,0,0,0,0,0,0,-1--1--1,,1|(100,333)|
+1,68,34,13,0,0,0,0,0,0,0,-1--1--1,,1|(241,335)|
+1,69,18,13,0,0,0,0,0,0,0,-1--1--1,,1|(243,311)|
+1,70,19,36,0,0,0,0,0,0,0,-1--1--1,,1|(91,79)|
+1,71,20,28,0,0,0,0,0,0,0,-1--1--1,,1|(114,147)|
+1,72,2,28,0,0,0,0,0,0,0,-1--1--1,,1|(112,138)|
+1,73,5,28,0,0,0,0,0,0,0,-1--1--1,,1|(107,156)|
+1,74,6,9,0,0,0,0,0,0,0,-1--1--1,,1|(99,232)|
+1,75,21,13,0,0,0,0,0,0,0,-1--1--1,,1|(243,322)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Energy Pricing
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Effective Primary Energy Price,143,304,71,8,0,3,0,0,0,0,0,0
+10,2,Capital Cost Basis Switch,396,93,61,8,0,3,0,0,-1,0,0,0
+10,3,SR Average Variable Cost,544,156,62,8,0,3,0,0,-1,0,0,0
+10,4,Initial Producer Price,359,361,50,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,5,Weight to Marg Cost,267,209,50,8,0,3,0,0,-1,0,0,0
+10,6,SR Average Cost,451,180,42,8,0,3,0,0,-1,0,0,0
+10,7,Weight to Average Cost,370,161,57,8,0,3,0,0,-1,0,0,0
+10,8,Capital Cost,455,144,30,8,0,3,0,0,-1,0,0,0
+10,9,Energy Capital,454,80,42,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Price Adjustment Time,487,358,53,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,11,Normal Production,362,111,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,12,Indicated Producer Price,404,249,59,8,0,3,0,0,-1,0,0,0
+10,13,Energy Production,647,127,50,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Desired Variable Input,678,155,60,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,Energy Production,569,107,50,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+12,16,48,492,302,6,6,0,3,0,0,-1,0,0,0
+11,17,48,437,302,5,6,34,3,0,0,1,0,0,0
+10,18,Producer Price Chg Rt,437,314,53,8,32,3,0,0,-1,0,0,0
+10,19,Supply Demand Effect,554,221,53,8,0,3,0,0,-1,0,0,0
+10,20,Supply Demand Coeff,671,193,53,8,0,3,0,0,-1,0,0,0
+10,21,Production Pressure,668,235,47,8,0,3,0,0,-1,0,0,0
+10,22,Exog Energy Price Switch,116,268,61,8,0,3,0,0,-1,0,0,0
+10,23,Normal Production,730,262,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,24,Energy Order Rate,717,209,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,25,Total Energy Expenditure,505,443,59,8,0,3,0,0,-1,0,0,0
+10,26,Final Data Time,19,240,38,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,27,Source Expenditure,617,444,47,8,0,3,0,0,-1,0,0,0
+10,28,Final Energy Price,615,479,50,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,29,Avg Energy Price,506,482,41,8,0,3,0,0,-1,0,0,0
+10,30,Energy Production,614,410,50,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,31,Total Energy Production,358,482,64,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,32,Marginal Resource Effect,548,185,66,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,33,Depletion Rent,260,344,42,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,34,Transition Time,50,220,37,8,0,3,0,0,-1,0,0,0
+10,35,Primary Energy Price,260,304,50,8,0,3,0,0,-1,0,0,0
+10,36,Energy Capital Cost,508,94,54,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,37,Initial Production,266,54,47,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,38,Adjusted Average Cost,443,214,56,8,0,3,0,0,-1,0,0,0
+10,39,Final Energy Price,15,305,43,8,0,3,0,0,-1,0,0,0
+10,40,Price Data,201,267,32,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,41,Price Switch,115,235,37,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,42,Total Tax,119,341,30,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,43,Resource Ratio,213,38,44,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,44,Resource Share,130,63,44,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,45,Energy Producer Price,361,303,30,15,3,3,0,0,0,0,0,0
+10,46,Init Unit Distribution Cost,14,343,59,8,0,3,0,0,-1,0,0,0
+10,47,Saturation Coeff,110,77,46,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,48,Scheduled Production,163,50,59,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,49,Capital Share,79,147,39,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,50,Desired Eff Energy Capital Ratio,50,131,83,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,51,Energy Capital,83,118,42,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,52,Energy Technology,115,194,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,53,Reference Energy Capital,71,164,66,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,54,Reference Variable Cost,89,179,65,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,55,SR Marginal Cost,305,175,43,8,0,3,0,0,-1,0,0,0
+10,56,Marginal Eff Energy Capital Ratio,239,98,78,8,0,3,0,0,-1,0,0,0
+10,57,Marginal Variable Input,211,154,56,8,0,3,0,0,-1,0,0,0
+1,58,30,27,0,0,0,0,0,0,0,-1--1--1,,1|(614,422)|
+1,59,27,25,0,0,0,0,0,0,0,-1--1--1,,1|(572,444)|
+1,60,25,29,0,0,0,0,0,0,0,-1--1--1,,1|(505,457)|
+1,61,28,27,0,0,0,0,0,0,0,-1--1--1,,1|(615,466)|
+1,62,11,8,0,0,0,0,0,0,0,-1--1--1,,1|(403,125)|
+1,63,2,8,0,0,0,0,0,0,0,-1--1--1,,1|(421,115)|
+1,64,55,12,0,0,0,0,0,0,0,-1--1--1,,1|(350,209)|
+1,65,5,12,0,0,0,0,0,0,0,-1--1--1,,1|(330,227)|
+1,66,9,8,0,0,0,0,0,0,0,-1--1--1,,1|(454,107)|
+1,67,8,6,0,0,0,0,0,0,0,-1--1--1,,1|(454,157)|
+1,68,3,6,0,0,0,0,0,0,0,-1--1--1,,1|(502,167)|
+1,69,13,3,0,0,0,0,0,0,0,-1--1--1,,1|(600,140)|
+1,70,14,3,0,0,0,0,0,0,0,-1--1--1,,1|(617,155)|
+1,71,15,8,0,0,0,0,0,0,0,-1--1--1,,1|(517,123)|
+1,72,17,16,100,0,0,22,0,0,0,-1--1--1,,1|(464,302)|
+1,73,12,17,1,0,0,0,0,0,0,-1--1--1,,1|(427,269)|
+1,74,10,18,1,0,0,0,0,0,0,-1--1--1,,1|(469,336)|
+1,75,23,21,0,0,0,0,0,0,0,-1--1--1,,1|(703,250)|
+1,76,21,19,0,0,0,0,0,0,0,-1--1--1,,1|(618,229)|
+1,77,20,19,0,0,0,0,0,0,0,-1--1--1,,1|(617,206)|
+1,78,24,21,0,0,0,0,0,0,0,-1--1--1,,1|(697,219)|
+1,79,31,29,0,0,0,0,0,0,0,-1--1--1,,1|(437,482)|
+1,80,1,39,0,0,0,0,0,0,0,-1--1--1,,1|(71,304)|
+1,81,17,45,4,0,0,22,0,0,0,-1--1--1,,1|(411,302)|
+1,82,40,1,0,0,0,0,0,0,0,-1--1--1,,1|(176,282)|
+1,83,45,18,1,0,0,0,0,0,0,-1--1--1,,1|(383,326)|
+1,84,42,39,0,0,0,0,0,0,0,-1--1--1,,1|(73,324)|
+1,85,46,39,0,0,0,0,0,0,0,-1--1--1,,1|(15,329)|
+1,86,22,1,0,0,0,0,0,0,0,-1--1--1,,1|(126,281)|
+1,87,26,22,0,0,0,0,0,0,0,-1--1--1,,1|(62,252)|
+1,88,41,22,0,0,0,0,0,0,0,-1--1--1,,1|(116,246)|
+1,89,34,22,0,0,0,0,0,0,0,-1--1--1,,1|(79,240)|
+1,90,36,8,0,0,0,0,0,0,0,-1--1--1,,1|(485,115)|
+1,91,37,56,0,0,0,0,0,0,0,-1--1--1,,1|(255,71)|
+1,92,43,56,0,0,0,0,0,0,0,-1--1--1,,1|(224,62)|
+1,93,44,56,0,0,0,0,0,0,0,-1--1--1,,1|(179,78)|
+1,94,47,56,0,0,0,0,0,0,0,-1--1--1,,1|(166,86)|
+1,95,48,56,0,0,0,0,0,0,0,-1--1--1,,1|(196,71)|
+1,96,49,57,0,0,0,0,0,0,0,-1--1--1,,1|(132,149)|
+1,97,50,57,0,0,0,0,0,0,0,-1--1--1,,1|(128,142)|
+1,98,51,57,0,0,0,0,0,0,0,-1--1--1,,1|(142,134)|
+1,99,52,57,0,0,0,0,0,0,0,-1--1--1,,1|(158,176)|
+1,100,53,57,0,0,0,0,0,0,0,-1--1--1,,1|(142,159)|
+1,101,54,57,0,0,0,0,0,0,0,-1--1--1,,1|(145,167)|
+1,102,56,55,0,0,0,0,0,0,0,-1--1--1,,1|(268,132)|
+1,103,57,55,0,0,0,0,0,0,0,-1--1--1,,1|(252,163)|
+1,104,7,12,0,0,0,0,0,0,0,-1--1--1,,1|(384,200)|
+1,105,45,12,1,0,0,0,0,0,0,-1--1--1,,1|(371,270)|
+1,106,19,12,0,0,0,0,0,0,0,-1--1--1,,1|(484,234)|
+1,107,45,35,0,0,0,0,0,0,0,-1--1--1,,1|(326,303)|
+1,108,35,1,0,0,0,0,0,0,0,-1--1--1,,1|(217,304)|
+1,109,33,35,0,0,0,0,0,0,0,-1--1--1,,1|(260,329)|
+1,110,32,38,0,0,0,0,0,0,0,-1--1--1,,1|(500,197)|
+1,111,6,38,0,0,0,0,0,0,0,-1--1--1,,1|(448,191)|
+1,112,38,12,0,0,0,0,0,0,0,-1--1--1,,1|(428,227)|
+1,113,4,45,0,0,0,0,0,0,1,-1--1--1,,1|(359,340)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Energy Price Perception
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Final Energy Price,257,269,50,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,2,Energy Price Discount,353,269,52,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,3,Perceived Energy Price,224,166,55,8,0,3,0,0,-1,0,0,0
+10,4,Initial Price Trend,100,155,42,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,5,Average Energy Price,182,254,58,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,6,LR Expected Energy Price,485,107,62,8,0,3,0,0,-1,0,0,0
+10,7,SR Energy Price Perc Time,483,183,64,8,0,3,0,0,-1,0,0,0
+10,8,Energy Forecast Time,449,59,52,8,0,3,0,0,-1,0,0,0
+10,9,Energy Price Perc Time,149,200,56,8,0,3,0,0,-1,0,0,0
+10,10,Energy Trend Time,260,59,45,8,0,3,0,0,-1,0,0,0
+10,11,Operative Energy Price,298,225,55,8,0,3,0,0,-1,0,0,0
+10,12,Historic Energy Price,263,105,30,15,3,3,0,0,0,0,0,0
+12,13,48,142,106,6,6,0,3,0,0,-1,0,0,0
+11,14,48,186,106,5,6,34,3,0,0,1,0,0,0
+10,15,Chg Hist Energy Price,186,118,52,8,32,3,0,0,-1,0,0,0
+10,16,Energy Price Trend,356,107,46,8,0,3,0,0,-1,0,0,0
+10,17,SR Expected Energy Price,344,185,62,8,0,3,0,0,-1,0,0,0
+1,18,1,11,0,0,0,0,0,0,0,-1--1--1,,1|(273,251)|
+1,19,14,12,4,0,0,22,0,0,0,-1--1--1,,1|(212,106)|
+1,20,14,13,100,0,0,22,0,0,0,-1--1--1,,1|(164,106)|
+1,21,12,15,1,0,0,0,0,0,0,-1--1--1,,1|(237,137)|
+1,22,12,16,0,0,0,0,0,0,0,-1--1--1,,1|(296,105)|
+1,23,16,6,0,0,0,0,0,0,0,-1--1--1,,1|(407,107)|
+1,24,10,16,1,0,0,0,0,0,0,-1--1--1,,1|(317,70)|
+1,25,10,14,1,0,0,0,0,0,0,-1--1--1,,1|(200,77)|
+1,26,8,6,1,0,0,0,0,0,0,-1--1--1,,1|(467,75)|
+1,27,2,11,0,0,0,0,0,0,0,-1--1--1,,1|(329,250)|
+1,28,11,3,0,0,0,0,0,0,0,-1--1--1,,1|(265,198)|
+1,29,9,3,0,0,0,0,0,0,0,-1--1--1,,1|(181,185)|
+1,30,3,15,1,0,0,0,0,0,0,-1--1--1,,1|(195,146)|
+1,31,3,6,1,0,0,0,0,0,0,-1--1--1,,1|(365,154)|
+1,32,3,16,1,0,0,0,0,0,0,-1--1--1,,1|(311,146)|
+1,33,11,17,0,0,0,0,0,0,0,-1--1--1,,1|(317,208)|
+1,34,7,17,0,0,0,0,0,0,0,-1--1--1,,1|(418,184)|
+1,35,10,12,0,0,0,0,0,0,1,-1--1--1,,1|(260,74)|
+1,36,4,12,1,0,0,0,0,0,1,-1--1--1,,1|(195,149)|
+1,37,11,12,1,0,0,0,0,0,1,-1--1--1,,1|(297,170)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Carbon Tax
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Indicated Carbon Tax,231,161,41,6,0,3,0,0,-1,0,0,0
+10,2,Carbon Tax,425,149,30,15,3,3,0,0,0,0,0,0
+10,3,Minimum Carbon Tax,230,102,42,6,0,3,0,0,-1,0,0,0
+12,4,48,288,149,6,6,0,3,0,0,-1,0,0,0
+10,5,Tax Adj Time,333,216,27,6,0,3,0,0,-1,0,0,0
+10,6,Carbon Content,546,110,31,6,0,3,0,0,-1,0,0,0
+10,7,Specific Carbon Tax,546,149,38,6,0,3,0,0,-1,0,0,0
+10,8,Constant Energy Tax,221,278,40,6,0,3,0,0,-1,0,0,0
+10,9,Effective CO2 in Atmosphere,80,188,61,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Concentration Coeff,105,170,38,6,0,3,0,0,-1,0,0,0
+10,11,Preindustrial CO2,101,209,40,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,12,Initial Tax Time,262,216,31,6,0,3,0,0,-1,0,0,0
+10,13,Constant Tax,116,234,26,6,0,3,0,0,-1,0,0,0
+11,14,6892,332,149,5,6,34,3,0,0,1,0,0,0
+10,15,Carbon Tax Adj Rate,332,161,40,6,32,3,0,0,-1,0,0,0
+10,16,Total Energy Carbon Emissions,8,59,65,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,17,Reference Emissions Rate,98,149,48,6,0,3,0,0,-1,0,0,0
+10,18,Emissions Coeff,115,128,32,6,0,3,0,0,-1,0,0,0
+10,19,Perceived Emissions Rate,102,89,48,6,0,3,0,0,-1,0,0,0
+10,20,Emissions Perception Time,18,116,51,6,0,3,0,0,-1,0,0,0
+10,21,Total Tax,545,206,20,6,0,3,0,0,-1,0,0,0
+10,22,Energy Tax,428,264,30,15,3,3,0,0,0,0,0,0
+12,23,48,289,266,6,6,0,3,0,0,-1,0,0,0
+11,24,48,333,266,5,6,34,3,0,0,1,0,0,0
+10,25,Energy Tax Adj Rate,333,278,40,6,32,3,0,0,-1,0,0,0
+1,26,22,25,1,0,0,0,0,0,0,-1--1--1,,1|(387,291)|
+1,27,24,23,100,0,0,22,0,0,0,-1--1--1,,1|(311,266)|
+1,28,24,22,4,0,0,22,0,0,0,-1--1--1,,1|(368,266)|
+1,29,6,7,0,0,0,0,0,0,0,-1--1--1,,1|(546,124)|
+1,30,9,1,0,0,0,0,0,0,0,-1--1--1,,1|(150,175)|
+1,31,10,1,0,0,0,0,0,0,0,-1--1--1,,1|(161,166)|
+1,32,11,1,0,0,0,0,0,0,0,-1--1--1,,1|(161,186)|
+1,33,13,1,0,0,0,0,0,0,0,-1--1--1,,1|(169,200)|
+1,34,17,1,0,0,0,0,0,0,0,-1--1--1,,1|(163,154)|
+1,35,18,1,0,0,0,0,0,0,0,-1--1--1,,1|(167,143)|
+1,36,16,19,0,0,0,0,0,0,0,-1--1--1,,1|(49,72)|
+1,37,19,1,0,0,0,0,0,0,0,-1--1--1,,1|(161,122)|
+1,38,20,19,0,0,0,0,0,0,0,-1--1--1,,1|(54,104)|
+1,39,22,21,0,0,0,0,0,0,0,-1--1--1,,1|(490,233)|
+1,40,7,21,0,0,0,0,0,0,0,-1--1--1,,1|(545,173)|
+1,41,14,2,4,0,0,22,0,0,0,-1--1--1,,1|(365,149)|
+1,42,14,4,100,0,0,22,0,0,0,-1--1--1,,1|(311,149)|
+1,43,1,15,0,0,0,0,0,0,0,-1--1--1,,1|(277,161)|
+1,44,2,15,1,0,0,0,0,0,0,-1--1--1,,1|(385,174)|
+1,45,2,7,0,0,0,0,0,0,0,-1--1--1,,1|(476,149)|
+1,46,12,15,0,0,0,0,0,0,0,-1--1--1,,1|(293,191)|
+1,47,5,15,0,0,0,0,0,0,0,-1--1--1,,1|(332,193)|
+1,48,8,25,0,0,0,0,0,0,0,-1--1--1,,1|(272,278)|
+1,49,12,24,0,0,0,0,0,0,0,-1--1--1,,1|(295,239)|
+1,50,5,24,0,0,0,0,0,0,0,-1--1--1,,1|(333,236)|
+1,51,3,1,0,0,0,0,0,0,0,-1--1--1,,1|(230,126)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Depletion Tax
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Initial Production,400,267,51,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,2,Depletion Rent,264,70,39,8,0,3,0,0,-1,0,0,0
+10,3,Frac Depletion Recovered,266,27,65,8,0,3,0,0,-1,0,0,0
+10,4,Resource Ratio,381,282,46,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,5,Resource Share,358,296,47,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,6,Saturation Coeff,322,308,49,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Scheduled Production,418,254,62,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,Marginal Resource Eff on Cost,142,204,77,8,0,3,0,0,-1,0,0,0
+10,9,Normal Variable Cost,72,293,61,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Energy Capital,44,278,45,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,11,Energy Capital Cost,15,259,58,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,12,LR Marginal Cost of Energy Prod,119,238,84,8,0,3,0,0,-1,0,0,0
+10,13,Normal Effective Energy Capital Ratio,116,306,103,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Init Resource Remaining,429,240,69,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,Desired Depletion Rent,263,117,30,15,3,3,0,0,0,0,0,0
+12,16,48,116,117,10,8,0,3,0,0,-1,0,0,0
+11,17,48,174,117,5,6,34,3,0,0,1,0,0,0
+10,18,Chg Depletion Rent,174,129,50,8,32,3,0,0,0,0,0,0
+10,19,Interest Rate,209,191,40,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,20,Initial Depletion Tax,103,46,52,8,0,3,0,0,-1,0,0,0
+10,21,Marginal Resource Eff Energy Capital Ratio,259,257,109,8,0,3,0,0,-1,0,0,0
+10,22,Desired Depletion Rent,145,347,66,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,23,Final Depletion Rent,279,347,53,8,0,3,0,0,-1,0,0,0
+10,24,FINAL TIME,233,377,43,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,25,Time,322,379,21,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,26,Cost Trend,305,230,29,8,0,3,0,0,-1,0,0,0
+10,27,Trend Time,416,209,30,8,0,3,0,0,-1,0,0,0
+10,28,Depletion Planning Horizon,428,169,70,8,0,3,0,0,-1,0,0,0
+10,29,Indicated Depletion Rent,321,196,63,8,0,3,0,0,-1,0,0,0
+10,30,Target Final Rent,446,186,44,8,0,3,0,0,-1,0,0,0
+10,31,FINAL TIME,547,169,43,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,32,Time,521,147,21,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,33,Initial Cost Trend,437,224,51,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,34,Time to Correct Rent,384,122,53,8,0,3,0,0,-1,0,0,0
+10,35,Depletion Rent Correction,292,170,66,8,0,3,0,0,-1,0,0,0
+10,36,Exog Energy Price Switch,425,137,72,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,37,22,23,0,0,0,0,0,0,0,-1--1--1,,1|(211,347)|
+1,38,14,21,0,0,0,0,0,0,0,-1--1--1,,1|(356,246)|
+1,39,12,8,0,0,0,0,0,0,0,-1--1--1,,1|(126,226)|
+1,40,13,12,0,0,0,0,0,0,0,-1--1--1,,1|(116,278)|
+1,41,9,12,0,0,0,0,0,0,0,-1--1--1,,1|(90,270)|
+1,42,10,12,0,0,0,0,0,0,0,-1--1--1,,1|(75,261)|
+1,43,11,12,0,0,0,0,0,0,0,-1--1--1,,1|(59,249)|
+1,44,8,18,1,0,0,0,0,0,0,-1--1--1,,1|(149,173)|
+1,45,21,8,0,0,0,0,0,0,0,-1--1--1,,1|(206,233)|
+1,46,7,21,0,0,0,0,0,0,0,-1--1--1,,1|(368,254)|
+1,47,6,21,0,0,0,0,0,0,0,-1--1--1,,1|(296,286)|
+1,48,5,21,0,0,0,0,0,0,0,-1--1--1,,1|(315,279)|
+1,49,4,21,0,0,0,0,0,0,0,-1--1--1,,1|(326,270)|
+1,50,1,21,0,0,0,0,0,0,0,-1--1--1,,1|(365,264)|
+1,51,15,2,0,0,0,0,0,0,0,-1--1--1,,1|(263,97)|
+1,52,19,18,1,0,0,0,0,0,0,-1--1--1,,1|(184,165)|
+1,53,17,15,4,0,0,22,0,0,0,-1--1--1,,1|(206,117)|
+1,54,17,16,100,0,0,22,0,0,0,-1--1--1,,1|(147,117)|
+1,55,15,18,1,0,0,0,0,0,0,-1--1--1,,1|(225,143)|
+1,56,24,23,0,0,0,0,0,0,0,-1--1--1,,1|(249,365)|
+1,57,25,23,0,0,0,0,0,0,0,-1--1--1,,1|(306,366)|
+1,58,8,26,1,0,0,0,0,0,0,-1--1--1,,1|(217,222)|
+1,59,27,26,0,0,0,0,0,0,0,-1--1--1,,1|(366,217)|
+1,60,19,29,0,0,0,0,0,0,0,-1--1--1,,1|(246,191)|
+1,61,28,29,0,0,0,0,0,0,0,-1--1--1,,1|(381,180)|
+1,62,26,29,1,0,0,0,0,0,0,-1--1--1,,1|(326,215)|
+1,63,8,29,1,0,0,0,0,0,0,-1--1--1,,1|(236,211)|
+1,64,30,29,0,0,0,0,0,0,0,-1--1--1,,1|(399,189)|
+1,65,34,35,0,0,0,0,0,0,0,-1--1--1,,1|(344,142)|
+1,66,15,35,1,0,0,0,0,0,0,-1--1--1,,1|(292,147)|
+1,67,29,35,1,0,0,0,0,0,0,-1--1--1,,1|(322,182)|
+1,68,32,28,0,0,0,0,0,0,0,-1--1--1,,1|(487,154)|
+1,69,31,28,0,0,0,0,0,0,0,-1--1--1,,1|(508,169)|
+1,70,36,35,0,0,0,0,0,0,0,-1--1--1,,1|(365,151)|
+1,71,35,18,1,0,0,0,0,0,0,-1--1--1,,1|(220,167)|
+1,72,3,2,0,0,0,0,0,0,0,-1--1--1,,1|(265,41)|
+1,73,33,26,0,0,0,0,0,0,0,-1--1--1,,1|(366,226)|
+1,74,20,15,0,0,0,0,0,64,1,-1--1--1,,1|(170,75)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Emissions
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Energy Production,291,291,41,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,2,Energy Carbon Emissions,232,239,48,6,0,3,0,0,-1,0,0,0
+10,3,Carbon Content,184,291,36,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,4,Total Carbon Emissions,381,197,45,6,0,3,0,0,-1,0,0,0
+10,5,Total Energy Carbon Emissions,231,196,59,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,6,Nonenergy Carbon Emissions,511,197,56,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,7,Capital,29,85,20,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,SR Aggr Energy,158,84,36,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,9,Total Energy Production,288,87,52,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Gross Output,408,88,32,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,11,Emissions Intensity of Capital,29,128,57,6,0,3,0,0,-1,0,0,0
+10,12,Emissions Intensity of Aggr Energy,159,128,66,6,0,3,0,0,-1,0,0,0
+10,13,Emissions Intensity of Energy,288,128,56,6,0,3,0,0,-1,0,0,0
+10,14,Emissions Intensity of Output,408,128,57,6,0,3,0,0,-1,0,0,0
+10,15,Emissions Pulse,382,239,31,6,0,3,0,0,-1,0,0,0
+10,16,Emissions Pulse Volume,382,288,46,6,0,3,0,0,-1,0,0,0
+10,17,Emissions Pulse Time,497,288,41,6,0,3,0,0,-1,0,0,0
+10,18,Time,520,263,17,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,19,TIME STEP,509,237,30,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,20,3,2,0,0,0,0,0,0,0,-1--1--1,,1|(203,269)|
+1,21,1,2,0,0,0,0,0,0,0,-1--1--1,,1|(265,268)|
+1,22,5,4,0,0,0,0,0,0,0,-1--1--1,,1|(308,196)|
+1,23,6,4,0,0,0,0,0,0,0,-1--1--1,,1|(446,197)|
+1,24,2,5,0,0,0,0,0,0,0,-1--1--1,,1|(231,222)|
+1,25,5,11,0,0,0,0,0,0,0,-1--1--1,,1|(134,163)|
+1,26,5,12,0,0,0,0,0,0,0,-1--1--1,,1|(199,165)|
+1,27,5,13,0,0,0,0,0,0,0,-1--1--1,,1|(255,165)|
+1,28,5,14,0,0,0,0,0,0,0,-1--1--1,,1|(314,164)|
+1,29,10,14,0,0,0,0,0,0,0,-1--1--1,,1|(408,102)|
+1,30,9,13,0,0,0,0,0,0,0,-1--1--1,,1|(288,102)|
+1,31,8,12,0,0,0,0,0,0,0,-1--1--1,,1|(158,101)|
+1,32,7,11,0,0,0,0,0,0,0,-1--1--1,,1|(29,101)|
+1,33,16,15,0,0,0,0,0,0,0,-1--1--1,,1|(382,269)|
+1,34,17,15,0,0,0,0,0,0,0,-1--1--1,,1|(443,265)|
+1,35,15,4,0,0,0,0,0,0,0,-1--1--1,,1|(381,223)|
+1,36,18,15,0,0,0,0,0,0,0,-1--1--1,,1|(463,253)|
+1,37,19,15,0,0,0,0,0,0,0,-1--1--1,,1|(450,237)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Carbon Cycle
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Preindustrial CO2,539,197,50,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,2,Preindustrial CO2,471,329,50,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+11,3,380,130,176,5,6,34,3,0,0,1,0,0,0
+10,4,Total Carbon Emissions,130,188,62,8,32,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,5,CO2 in Atmosphere,228,176,30,15,3,3,0,0,0,0,0,0
+10,6,CO2 in Mixed Layer,229,340,30,15,3,3,0,0,0,0,0,0
+10,7,CO2 in Deep Ocean,229,461,30,15,3,3,0,0,0,0,0,0
+12,8,48,66,176,6,6,0,3,0,0,-1,0,0,0
+11,9,48,231,272,6,5,33,3,0,0,4,0,0,0
+10,10,Flux Atm to Ocean,277,272,45,8,32,3,0,0,-1,0,0,0
+11,11,3996,232,395,6,5,33,3,0,0,4,0,0,0
+10,12,Diffusion Flux,272,395,33,8,32,3,0,0,-1,0,0,0
+10,13,Thickness,392,414,24,8,0,3,0,0,-1,0,0,0
+10,14,Concentration,299,431,34,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,15,Eddy Diff Coeff,394,389,38,8,0,3,0,0,-1,0,0,0
+10,16,Mixed Depth,386,362,32,8,0,3,0,0,-1,0,0,0
+10,17,CO2 in Humus,223,48,30,15,3,3,0,0,0,0,0,0
+10,18,Atmospheric Retention,107,506,60,8,0,2,0,0,-1,0,0,0
+10,19,CO2 in Biomass,403,125,30,15,3,3,0,0,0,0,0,0
+11,20,4188,362,176,5,6,34,3,0,0,1,0,0,0
+10,21,Flux Atm to Biomass,362,188,50,8,32,3,0,0,-1,0,0,0
+10,22,Biostim Coeff,497,177,33,8,0,3,0,0,-1,0,0,0
+10,23,Biomass Res Time,260,80,44,8,0,3,0,0,-1,0,0,0
+10,24,Init NPP,463,155,22,8,0,3,0,0,-1,0,0,0
+10,25,Buffer Factor,441,232,32,8,0,3,0,0,-1,0,0,0
+10,26,Equil CO2 in Mixed Layer,397,278,62,8,0,3,0,0,-1,0,0,0
+10,27,Mixing Time,312,312,30,8,0,3,0,0,-1,0,0,0
+10,28,Preind CO2 in Mixed Layer,509,305,65,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,29,Ref Buffer Factor,554,236,41,8,0,3,0,0,-1,0,0,0
+10,30,Ref Buff CO2,551,254,34,8,0,3,0,0,-1,0,0,0
+10,31,Buff CO2 Coeff,534,215,38,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+11,32,4124,305,123,5,6,34,3,0,0,1,0,0,0
+10,33,Flux Biomass to Atmosphere,305,135,68,8,32,3,0,0,0,0,0,0
+10,34,Humification Fraction,345,97,50,8,0,3,0,0,-1,0,0,0
+10,35,Humus Res Time,110,61,41,8,0,3,0,0,-1,0,0,0
+11,36,4076,344,47,5,6,34,3,0,0,1,0,0,0
+10,37,Flux Biomass to Humus,344,59,56,8,32,3,0,0,-1,0,0,0
+11,38,4204,207,113,6,5,33,3,0,0,2,0,0,0
+10,39,Flux Humus to Atmosphere,146,113,64,8,32,3,0,0,-1,0,0,0
+1,40,1,21,1,0,0,0,0,0,0,-1--1--1,,1|(427,208)|
+1,41,34,32,0,0,0,0,0,0,0,-1--1--1,,1|(325,110)|
+1,42,5,21,1,0,0,0,0,0,0,-1--1--1,,1|(279,187)|
+1,43,22,21,1,0,0,0,0,0,0,-1--1--1,,1|(446,193)|
+1,44,24,21,1,0,0,0,0,0,0,-1--1--1,,1|(435,182)|
+1,45,23,32,0,0,0,0,0,0,0,-1--1--1,,1|(281,100)|
+1,46,35,39,0,0,0,0,0,0,0,-1--1--1,,1|(125,82)|
+1,47,17,39,1,0,0,0,0,0,0,-1--1--1,,1|(168,68)|
+1,48,38,17,100,0,0,22,0,0,0,-1--1--1,,1|(207,86)|
+1,49,38,5,4,0,0,22,0,0,0,-1--1--1,,1|(207,139)|
+1,50,34,37,0,0,0,0,0,0,0,-1--1--1,,1|(344,83)|
+1,51,19,37,1,0,0,0,0,0,0,-1--1--1,,1|(389,84)|
+1,52,23,37,0,0,0,0,0,0,0,-1--1--1,,1|(296,70)|
+1,53,36,19,100,0,0,22,0,0,0,-1--1--1,,1|(403,47)|
+1,54,36,17,4,0,0,22,0,0,0,-1--1--1,,1|(296,47)|
+1,55,19,33,1,0,0,0,0,0,0,-1--1--1,,1|(349,151)|
+1,56,32,19,100,0,0,22,0,0,0,-1--1--1,,1|(341,123)|
+1,57,32,5,4,0,0,22,0,0,0,-1--1--1,,1|(228,123)|
+1,58,28,26,0,0,0,0,0,0,0,-1--1--1,,1|(458,293)|
+1,59,31,25,0,0,0,0,0,0,0,-1--1--1,,1|(489,223)|
+1,60,30,25,0,0,0,0,0,0,0,-1--1--1,,1|(500,244)|
+1,61,29,25,0,0,0,0,0,0,0,-1--1--1,,1|(498,233)|
+1,62,25,26,1,0,0,0,0,0,0,-1--1--1,,1|(434,257)|
+1,63,20,5,68,0,0,22,0,0,0,-1--1--1,,1|(308,176)|
+1,64,20,19,4,0,0,22,0,0,0,-1--1--1,,1|(403,176)|
+1,65,13,14,0,0,0,0,0,0,0,-1--1--1,,1|(355,420)|
+1,66,7,14,1,0,0,0,0,0,0,-1--1--1,,1|(285,462)|
+1,67,14,12,1,0,0,0,0,0,0,-1--1--1,,1|(297,410)|
+1,68,16,12,0,0,0,0,0,0,0,-1--1--1,,1|(333,377)|
+1,69,6,12,1,0,0,0,0,0,0,-1--1--1,,1|(275,361)|
+1,70,13,12,0,0,0,0,0,0,0,-1--1--1,,1|(341,406)|
+1,71,15,12,0,0,0,0,0,0,0,-1--1--1,,1|(335,391)|
+1,72,6,10,1,0,0,0,0,0,0,-1--1--1,,1|(272,296)|
+1,73,11,6,100,0,0,22,0,0,0,-1--1--1,,1|(232,372)|
+1,74,11,7,4,0,0,22,0,0,0,-1--1--1,,1|(232,422)|
+1,75,9,5,68,0,0,22,0,0,0,-1--1--1,,1|(231,230)|
+1,76,9,6,4,0,0,22,0,0,0,-1--1--1,,1|(231,301)|
+1,77,26,10,1,0,0,0,0,0,0,-1--1--1,,1|(326,292)|
+1,78,27,10,0,0,0,0,0,0,0,-1--1--1,,1|(298,296)|
+1,79,5,25,1,0,0,0,0,0,0,-1--1--1,,1|(328,202)|
+1,80,5,26,1,0,0,0,0,0,0,-1--1--1,,1|(328,218)|
+1,81,3,5,4,0,0,22,0,0,0,-1--1--1,,1|(166,176)|
+1,82,3,8,100,0,0,22,0,0,0,-1--1--1,,1|(98,176)|
+1,83,2,26,0,0,0,0,0,0,0,-1--1--1,,1|(438,305)|
+10,84,init co2 in atm,161,242,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,85,84,5,0,0,0,0,0,0,1,-1--1--1,,1|(190,212)|
+10,86,Init CO2 in Mixed Ocean,158,398,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,87,86,6,0,0,0,0,0,0,1,-1--1--1,,1|(189,372)|
+10,88,Init CO2 in Deep Ocean,228,519,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,89,88,7,0,0,0,0,0,0,1,-1--1--1,,1|(228,495)|
+10,90,Init CO2 in Humus,222,-18,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,91,90,17,0,0,0,0,0,0,1,-1--1--1,,1|(222,10)|
+10,92,Init CO2 in Biomass,513,126,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,93,92,19,0,0,0,0,0,0,1,-1--1--1,,1|(463,125)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*DICE Carbon
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Total Carbon Emissions,94,212,50,6,0,2,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,2,CO2 in Atmos,314,148,30,15,3,3,0,0,0,0,0,0
+10,3,Marginal Atmos Retention,245,212,50,6,0,3,0,0,-1,0,0,0
+10,4,Average Atmos Retention,234,96,49,6,0,3,0,0,-1,0,0,0
+10,5,Rate of CO2 Transfer,533,176,41,6,0,3,0,0,-1,0,0,0
+10,6,Preindustrial CO2,483,216,35,6,0,3,0,0,-1,0,0,0
+12,7,48,162,149,6,6,0,3,0,0,-1,0,0,0
+12,8,48,504,148,6,6,0,3,0,0,-1,0,0,0
+11,9,48,421,148,5,6,34,3,0,0,1,0,0,0
+10,10,CO2 Storage,421,160,25,6,32,3,0,0,-1,0,0,0
+11,11,4492,226,149,5,6,34,3,0,0,1,0,0,0
+10,12,CO2 Net Emiss,226,161,30,6,32,3,0,0,-1,0,0,0
+1,13,9,2,100,0,0,22,0,0,0,-1--1--1,,1|(380,148)|
+1,14,9,8,4,0,0,22,0,0,0,-1--1--1,,1|(461,148)|
+1,15,11,7,100,0,0,22,0,0,0,-1--1--1,,1|(194,149)|
+1,16,11,2,4,0,0,22,0,0,0,-1--1--1,,1|(257,149)|
+1,17,2,10,1,0,0,0,0,0,0,-1--1--1,,1|(362,175)|
+1,18,6,10,0,0,0,0,0,0,0,-1--1--1,,1|(455,191)|
+1,19,5,10,0,0,0,0,0,0,0,-1--1--1,,1|(474,167)|
+1,20,3,12,1,0,0,0,0,0,0,-1--1--1,,1|(239,189)|
+1,21,1,12,1,0,0,0,0,0,0,-1--1--1,,1|(145,182)|
+1,22,11,4,0,0,0,0,0,0,0,-1--1--1,,1|(228,128)|
+1,23,9,4,1,0,0,0,0,0,0,-1--1--1,,1|(344,115)|
+1,24,1,4,1,0,0,0,0,0,0,-1--1--1,,1|(131,142)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*DICE Climate
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,0,0
+10,1,Climate Sensitivity,155,150,43,8,0,3,0,0,-1,0,0,0
+10,2,Atmos UOcean Temp,203,269,30,15,3,3,0,0,0,0,0,0
+10,3,Temp Diff,206,328,25,8,0,3,0,0,-1,0,0,0
+10,4,Feedback Cooling,253,225,44,8,0,3,0,0,-1,0,0,0
+10,5,CO2 in Atmosphere,311,42,55,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,6,DICE IPCC Other Rad Forcing,401,159,74,8,0,3,0,0,-1,0,0,0
+10,7,CO2 Rad Forcing,290,137,43,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,8,Climate Feedback Param,221,185,59,8,0,3,0,0,-1,0,0,0
+10,9,Heat Transfer,312,329,33,8,0,3,0,0,-1,0,0,0
+10,10,A UO Heat Cap,413,282,40,8,0,3,0,0,-1,0,0,0
+10,11,Heat Trans Coeff,426,329,41,8,0,3,0,0,-1,0,0,0
+10,12,Radiative Forcing,320,194,41,8,0,3,0,0,-1,0,0,0
+10,13,Deep Ocean Temp,206,381,30,15,3,3,0,0,0,0,0,0
+12,14,48,349,268,6,6,0,3,0,0,-1,0,0,0
+10,15,CO2 in Atmos,362,57,42,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,16,CO2 Rad Force Coeff,201,97,53,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,17,Preindustrial CO2,254,71,43,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,18,Carbon Cycle Switch,479,89,50,8,0,3,0,0,-1,0,0,0
+12,19,48,337,381,6,6,0,3,0,0,-1,0,0,0
+11,20,48,284,381,5,6,34,3,0,0,1,0,0,0
+10,21,Chg DO Temp,284,395,36,8,32,3,0,0,-1,0,0,0
+11,22,4748,287,268,5,6,34,3,0,0,1,0,0,0
+10,23,Chg A UO Temp,287,282,41,8,32,3,0,0,-1,0,0,0
+10,24,DO Heat Cap,413,392,34,8,0,3,0,0,-1,0,0,0
+10,25,Heat Capacity Ratio,407,429,48,8,0,3,0,0,-1,0,0,0
+10,26,Effective CO2 in Atmosphere,343,101,69,8,0,3,0,0,-1,0,0,0
+1,27,9,20,1,0,0,0,0,0,0,-1--1--1,,1|(308,356)|
+1,28,12,22,1,0,0,0,0,0,0,-1--1--1,,1|(314,231)|
+1,29,4,22,1,0,0,0,0,0,0,-1--1--1,,1|(276,238)|
+1,30,22,14,100,0,0,22,0,0,0,-1--1--1,,1|(317,268)|
+1,31,22,2,4,0,0,22,0,0,0,-1--1--1,,1|(257,268)|
+1,32,20,19,100,0,0,22,0,0,0,-1--1--1,,1|(309,381)|
+1,33,20,13,4,0,0,22,0,0,0,-1--1--1,,1|(257,381)|
+1,34,17,7,0,0,0,0,0,0,0,-1--1--1,,1|(269,99)|
+1,35,16,7,0,0,0,0,0,0,0,-1--1--1,,1|(240,115)|
+1,36,2,3,0,0,0,0,0,0,0,-1--1--1,,1|(203,296)|
+1,37,13,3,0,0,0,0,0,0,0,-1--1--1,,1|(206,356)|
+1,38,7,12,0,0,0,0,0,0,0,-1--1--1,,1|(302,161)|
+1,39,6,12,0,0,0,0,0,0,0,-1--1--1,,1|(365,174)|
+1,40,3,9,0,0,0,0,0,0,0,-1--1--1,,1|(249,328)|
+1,41,24,9,0,0,0,0,0,0,0,-1--1--1,,1|(367,363)|
+1,42,11,9,0,0,0,0,0,0,0,-1--1--1,,1|(370,329)|
+1,43,2,4,1,0,0,0,0,0,0,-1--1--1,,1|(209,243)|
+1,44,8,4,0,0,0,0,0,0,0,-1--1--1,,1|(233,200)|
+1,45,24,21,0,0,0,0,0,0,0,-1--1--1,,1|(354,393)|
+1,46,9,23,1,0,0,0,0,0,0,-1--1--1,,1|(308,305)|
+1,47,10,23,0,0,0,0,0,0,0,-1--1--1,,1|(356,282)|
+1,48,15,26,0,0,0,0,0,0,0,-1--1--1,,1|(354,74)|
+1,49,26,7,0,0,0,0,0,0,0,-1--1--1,,1|(320,116)|
+1,50,18,26,0,0,0,0,0,0,0,-1--1--1,,1|(425,92)|
+1,51,5,26,0,0,0,0,0,0,0,-1--1--1,,1|(323,66)|
+10,52,Init Atmos UOcean Temp,108,269,30,15,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,53,52,2,0,0,0,0,0,0,1,-1--1--1,,1|(150,269)|
+1,54,1,8,0,0,0,0,0,0,1,-1--1--1,,1|(182,164)|
+1,55,16,8,0,0,0,0,0,0,1,-1--1--1,,1|(209,135)|
+1,56,25,24,0,0,0,0,0,0,1,-1--1--1,,1|(409,416)|
+1,57,11,24,0,0,0,0,0,0,1,-1--1--1,,1|(420,356)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Impacts
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Gross Output,285,131,34,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,2,Output Loss,284,187,32,8,0,3,0,0,-1,0,0,0
+10,3,Climate Damage Effect,206,239,59,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,4,Labor Force,302,40,39,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,5,Operating Capital,341,59,52,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,6,Reference Labor,254,53,49,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,Atmos UOcean Temp,328,284,61,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,9,Climate Damage Nonlinearity,107,284,75,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,10,Climate Damage Scale,160,305,57,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,11,Reference Temperature,254,305,58,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,12,Reference Output,410,128,51,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,13,Factor Productivity,393,101,56,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Value Share of Labor,206,69,60,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,Environmental Services per Cap,143,133,80,8,0,3,0,0,-1,0,0,0
+10,16,Ref Envir Services per Cap,143,97,75,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,17,Adapted Temperature,340,236,30,15,3,3,0,0,0,0,0,0
+12,18,48,489,238,10,8,0,3,0,0,-1,0,0,0
+11,19,48,432,237,5,6,34,3,0,0,1,0,0,0
+10,20,Adaptation Rate,432,249,41,8,32,3,0,0,-1,0,0,0
+10,21,Fractional Adaptation Rate,476,285,67,8,0,3,0,0,-1,0,0,0
+10,22,Consumption Equiv Loss,111,186,63,8,0,3,0,0,-1,0,0,0
+10,23,Marginal Util Equiv Cons,111,197,71,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,24,Share of Consumption,59,220,63,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,25,Consumption,53,152,41,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,26,8,3,1,0,0,0,0,0,0,-1--1--1,,1|(282,263)|
+1,27,9,3,0,0,0,0,0,0,0,-1--1--1,,1|(149,264)|
+1,28,10,3,0,0,0,0,0,0,0,-1--1--1,,1|(178,277)|
+1,29,1,2,0,0,0,0,0,0,0,-1--1--1,,1|(284,152)|
+1,30,3,2,0,0,0,0,0,0,0,-1--1--1,,1|(239,216)|
+1,31,3,1,0,0,0,0,0,0,0,-1--1--1,,1|(240,190)|
+1,32,4,1,0,0,0,0,0,0,0,-1--1--1,,1|(294,78)|
+1,33,5,1,0,0,0,0,0,0,0,-1--1--1,,1|(317,89)|
+1,34,6,1,0,0,0,0,0,0,0,-1--1--1,,1|(266,85)|
+1,36,12,1,0,0,0,0,0,0,0,-1--1--1,,1|(345,129)|
+1,37,13,1,0,0,0,0,0,0,0,-1--1--1,,1|(345,114)|
+1,38,14,1,0,0,0,0,0,0,0,-1--1--1,,1|(239,95)|
+1,39,3,15,0,0,0,0,0,0,0,-1--1--1,,1|(178,191)|
+1,40,16,15,0,0,0,0,0,0,0,-1--1--1,,1|(143,108)|
+1,41,11,3,0,0,0,0,0,0,0,-1--1--1,,1|(234,277)|
+1,42,17,3,0,0,0,0,0,0,0,-1--1--1,,1|(294,236)|
+1,43,19,17,4,0,0,22,0,0,0,-1--1--1,,1|(398,237)|
+1,44,19,18,100,0,0,22,0,0,0,-1--1--1,,1|(458,237)|
+1,45,17,20,1,0,0,0,0,0,0,-1--1--1,,1|(371,259)|
+1,46,8,20,1,0,0,0,0,0,0,-1--1--1,,1|(403,275)|
+1,47,21,20,0,0,0,0,0,0,0,-1--1--1,,1|(459,271)|
+1,48,3,22,0,0,0,0,0,0,0,-1--1--1,,1|(164,215)|
+1,49,24,22,0,0,0,0,0,0,0,-1--1--1,,1|(78,206)|
+1,50,25,22,0,0,0,0,0,0,0,-1--1--1,,1|(75,165)|
+10,51,Reference Operating Capital,396,159,49,14,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128
+1,52,51,1,0,0,0,0,0,64,0,-1--1--1,,1|(338,144)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Energy Initialization
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,0,0
+10,1,Ref Energy Value Share,364,320,56,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,2,Ref Aggr Energy Production,110,322,66,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,3,Reference Energy Capital,370,239,59,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,4,Reference Variable Cost,369,277,58,8,0,3,0,0,-1,0,0,0
+10,5,Variable Share,473,278,35,8,0,3,0,0,-1,0,0,0
+10,6,Reference Production,104,232,51,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,7,Reference Resource,105,126,54,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,Initial Production,106,181,40,8,0,3,0,0,-1,0,0,0
+10,9,Init Cum Energy Investment,108,77,71,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Init Cum Prod,107,100,41,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,11,Initial Energy Requirement,104,266,61,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,12,Initial Producer Price,104,203,50,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,13,Initial Production Growth,107,53,65,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Initial Resource,104,152,44,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,15,Capital Share,474,240,32,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,16,Initial Producer Price,236,128,56,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,17,Init Unit Distribution Cost,231,156,66,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,18,Energy Capital Cost,480,179,54,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,19,Total Tax,231,301,30,8,0,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,20,Reference Pretax Expenditure,236,238,69,8,0,3,0,0,-1,0,0,0
+10,21,Ref Total Expenditure,233,323,51,8,0,3,0,0,-1,0,0,0
+10,22,Reference Final Expenditure,234,279,65,8,0,3,0,0,-1,0,0,0
+10,23,Final Energy Price,110,290,50,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,24,15,3,0,0,0,0,0,0,1,-1--1--1,,1|(440,239)|
+1,25,18,3,0,0,0,0,0,0,1,-1--1--1,,1|(429,206)|
+1,26,20,3,0,0,0,0,0,0,1,-1--1--1,,1|(302,239)|
+1,27,20,4,0,0,0,0,0,0,1,-1--1--1,,1|(297,256)|
+1,28,5,4,0,0,0,0,0,0,1,-1--1--1,,1|(437,277)|
+1,29,15,5,0,0,0,0,0,0,1,-1--1--1,,1|(473,254)|
+1,30,12,20,0,0,0,0,0,0,1,-1--1--1,,1|(164,219)|
+1,31,8,20,0,0,0,0,0,0,1,-1--1--1,,1|(166,207)|
+1,32,22,21,0,0,0,0,0,0,1,-1--1--1,,1|(233,296)|
+10,33,Energy Price Discount,107,308,59,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,34,33,22,0,0,0,0,0,0,1,-1--1--1,,1|(164,294)|
+1,35,23,22,0,0,0,0,0,0,1,-1--1--1,,1|(159,286)|
+1,36,8,22,0,0,0,0,0,0,1,-1--1--1,,1|(165,227)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Indicators
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Savings Rate,168,-84,25,6,0,3,0,0,-1,0,0,0
+10,2,Total Investment,119,-121,33,6,0,3,0,0,-1,0,0,0
+10,3,Gross Output,215,-124,32,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,4,Total Capital,127,-17,26,6,0,3,0,0,-1,0,0,0
+10,5,Investment Rate,67,-150,37,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,6,Total Energy Investment,161,-151,52,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Capital,92,-53,20,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,Total Energy Capital,174,-53,45,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,9,Energy Capital,318,-146,34,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Total Energy Capital,317,-115,40,6,0,3,0,0,-1,0,0,0
+10,11,Energy Capital Completion Rate,431,-147,66,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,12,Total Energy Investment,428,-114,47,6,0,3,0,0,-1,0,0,0
+10,13,Energy Order Rate,131,37,44,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Gross Output,113,233,32,6,0,2,0,2,-1,0,0,0,-1--1--1,0-0-0,|12||128-128-128
+10,15,Total Energy Cost,266,176,35,6,0,3,0,0,-1,0,0,0
+10,16,Primary Energy Order Rate,131,78,51,6,0,3,0,0,-1,0,0,0
+10,17,Total Energy Production,516,82,52,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,18,Production Share,455,42,32,6,0,3,0,0,-1,0,0,0
+10,19,Indicated Total Cost Energy Production,364,139,79,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,20,Total Energy Expenditure,412,175,53,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,21,Energy Order Rate,254,81,44,6,0,2,0,0,-1,0,0,0
+10,22,Output Growth Rate,116,264,40,6,0,3,0,0,-1,0,0,0
+10,23,Availability,316,42,23,6,0,3,0,0,-1,0,0,0
+10,24,Consumption Growth Rate,259,266,51,6,0,3,0,0,-1,0,0,0
+10,25,Growth Trend Time,185,286,38,6,0,3,0,0,-1,0,0,0
+10,26,Energy Production,376,83,41,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,27,Fraction of Energy Goods Avail,198,138,65,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||130-130-130
+10,28,Energy Invest Req,338,208,41,6,0,2,0,2,-1,0,0,0,-1--1--1,0-0-0,|12||130-130-130
+10,29,Fraction of Invest Goods Avail,214,207,63,6,0,2,0,2,-1,0,0,0,-1--1--1,0-0-0,|12||130-130-130
+10,30,Hist Output Growth Rate,185,319,54,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,31,Avg Energy Price,475,207,33,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,32,Total Energy Production,537,175,52,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,33,Consumption,262,234,32,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,34,Emissions Intensity of Output,377,-29,57,6,0,3,0,0,-1,0,0,0
+10,35,Gross Output,305,-71,32,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,36,Total Energy Carbon Emissions,448,-65,65,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,37,Emissions Intensity of Energy,516,-32,56,6,0,3,0,0,-1,0,0,0
+10,38,Total Energy Production,581,-67,52,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,39,29,15,0,0,0,0,0,0,0,-1--1--1,,1|(235,194)|
+1,40,28,15,0,0,0,0,0,0,0,-1--1--1,,1|(307,194)|
+1,41,27,15,0,0,0,0,0,0,0,-1--1--1,,1|(227,154)|
+1,42,19,15,0,0,0,0,0,0,0,-1--1--1,,1|(320,155)|
+1,43,13,16,0,0,0,0,0,0,0,-1--1--1,,1|(131,52)|
+1,44,26,18,0,0,0,0,0,0,0,-1--1--1,,1|(410,65)|
+1,45,17,18,0,0,0,0,0,0,0,-1--1--1,,1|(490,65)|
+1,46,21,23,0,0,0,0,0,0,0,-1--1--1,,1|(280,64)|
+1,47,26,23,0,0,0,0,0,0,0,-1--1--1,,1|(350,65)|
+1,48,11,12,0,0,0,0,0,0,0,-1--1--1,,1|(430,-135)|
+1,49,9,10,0,0,0,0,0,0,0,-1--1--1,,1|(317,-135)|
+1,50,6,2,0,0,0,0,0,0,0,-1--1--1,,1|(143,-139)|
+1,51,5,2,0,0,0,0,0,0,0,-1--1--1,,1|(88,-137)|
+1,52,8,4,0,0,0,0,0,0,0,-1--1--1,,1|(155,-38)|
+1,53,7,4,0,0,0,0,0,0,0,-1--1--1,,1|(105,-39)|
+1,54,2,1,0,0,0,0,0,0,0,-1--1--1,,1|(138,-106)|
+1,55,3,1,0,0,0,0,0,0,0,-1--1--1,,1|(195,-107)|
+1,56,25,22,0,0,0,0,0,0,0,-1--1--1,,1|(155,276)|
+1,57,25,24,0,0,0,0,0,0,0,-1--1--1,,1|(216,277)|
+1,58,33,24,0,0,0,0,0,0,0,-1--1--1,,1|(261,245)|
+1,59,14,22,0,0,0,0,0,0,0,-1--1--1,,1|(113,243)|
+1,60,30,24,0,0,0,0,0,0,0,-1--1--1,,1|(217,295)|
+1,61,30,22,0,0,0,0,0,0,0,-1--1--1,,1|(155,294)|
+1,62,20,31,0,0,0,0,0,0,0,-1--1--1,,1|(438,188)|
+1,63,32,31,0,0,0,0,0,0,0,-1--1--1,,1|(510,188)|
+1,64,35,34,0,0,0,0,0,0,0,-1--1--1,,1|(336,-53)|
+1,65,36,34,0,0,0,0,0,0,0,-1--1--1,,1|(417,-49)|
+1,66,36,37,0,0,0,0,0,0,0,-1--1--1,,1|(476,-50)|
+1,67,38,37,0,0,0,0,0,0,0,-1--1--1,,1|(553,-51)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Data
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,World Crude Price,59,37,47,8,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,2,Oil Production,59,101,38,8,0,3,0,0,-1,0,0,0
+10,3,World Gas Price,59,56,42,8,0,3,0,0,-1,0,0,0
+10,4,World Coal Price,68,77,44,8,0,3,0,0,-1,0,0,0
+10,5,Elect Price,304,90,28,8,0,3,0,0,-1,0,0,0
+10,6,Primary Energy,67,185,40,8,0,3,0,0,-1,0,0,0
+10,7,Traditional Energy,68,203,47,8,0,3,0,0,-1,0,0,0
+10,8,Commercial Energy,68,222,51,8,0,3,0,0,-1,0,0,0
+10,9,Gas Production,61,125,39,8,0,3,0,0,-1,0,0,0
+10,10,Coal Production,59,151,41,8,0,3,0,0,-1,0,0,0
+10,11,Total Electricity,305,208,41,8,0,3,0,0,-1,0,0,0
+10,12,Thermal Electricity,303,188,49,8,0,3,0,0,-1,0,0,0
+10,13,Hydro Electricity,305,127,44,8,0,3,0,0,-1,0,0,0
+10,14,Nuclear Electricity,306,145,48,8,0,3,0,0,-1,0,0,0
+10,15,Other Electricity,307,165,42,8,0,3,0,0,-1,0,0,0
+10,16,GDP Deflator,408,36,36,8,0,3,0,0,-1,0,0,0
+10,17,World GDP,409,56,31,8,0,3,0,0,-1,0,0,0
+10,18,Invest Frac GDP,410,78,43,8,0,3,0,0,-1,0,0,0
+10,19,Cons Frac GDP,411,99,40,8,0,3,0,0,-1,0,0,0
+10,20,World Bank Population,411,119,59,8,0,3,0,0,-1,0,0,0
+10,21,World Pop Growth Rt,412,137,55,8,0,3,0,0,-1,0,0,0
+10,22,World Investment,509,66,45,8,0,3,0,0,-1,0,0,0
+10,23,Average Thermal Price,162,56,58,8,0,3,0,0,-1,0,0,0
+10,24,Primary Electricity,200,147,48,8,0,3,0,0,-1,0,0,0
+10,25,Average Energy Price,197,90,55,8,0,3,0,0,-1,0,0,0
+10,26,GDP,500,44,14,8,0,3,0,0,-1,0,0,0
+10,27,World Population,599,117,51,8,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,28,17,26,0,0,0,0,0,0,0,-1--1--1,,1|(456,49)|
+1,29,15,24,0,0,0,0,0,0,0,-1--1--1,,1|(262,157)|
+1,30,14,24,0,0,0,0,0,0,0,-1--1--1,,1|(259,144)|
+1,31,13,24,0,0,0,0,0,0,0,-1--1--1,,1|(259,135)|
+1,32,10,25,0,0,0,0,0,0,0,-1--1--1,,1|(121,123)|
+1,33,9,25,0,0,0,0,0,0,0,-1--1--1,,1|(121,109)|
+1,34,2,25,0,0,0,0,0,0,0,-1--1--1,,1|(112,96)|
+1,35,23,25,0,0,0,0,0,0,0,-1--1--1,,1|(174,68)|
+1,36,5,25,0,0,0,0,0,0,0,-1--1--1,,1|(271,90)|
+1,37,24,25,0,0,0,0,0,0,0,-1--1--1,,1|(199,125)|
+1,38,10,23,0,0,0,0,0,0,0,-1--1--1,,1|(104,108)|
+1,39,9,23,0,0,0,0,0,0,0,-1--1--1,,1|(105,94)|
+1,40,2,23,0,0,0,0,0,0,0,-1--1--1,,1|(103,81)|
+1,41,4,23,0,0,0,0,0,0,0,-1--1--1,,1|(107,67)|
+1,42,3,23,0,0,0,0,0,0,0,-1--1--1,,1|(95,56)|
+1,43,1,23,0,0,0,0,0,0,0,-1--1--1,,1|(103,45)|
+1,44,18,22,0,0,0,0,0,0,0,-1--1--1,,1|(451,73)|
+1,45,17,22,0,0,0,0,0,0,0,-1--1--1,,1|(445,59)|
+1,46,27,20,0,0,0,0,0,0,0,-1--1--1,,1|(516,117)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Data 2
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,0,0
+10,1,Price Data,310,119,22,6,0,3,0,0,-1,0,0,0
+10,2,Production Data,306,240,32,6,0,3,0,0,-1,0,0,0
+10,3,Elect Price,194,156,27,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,4,World Coal Price,192,134,40,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,5,World Crude Price,191,109,43,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,6,World Gas Price,188,88,39,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,7,Coal Production,193,244,38,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,8,Gas Production,187,266,36,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,9,Hydro Electricity,190,292,40,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,10,Oil Production,197,198,35,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,11,Share Data,398,240,23,6,0,3,0,0,-1,0,0,0
+10,12,Nuclear Electricity,194,223,42,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,13,Other Electricity,194,321,38,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,14,Total Production Data,397,286,44,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+10,15,Gas Production,404,103,36,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,16,Oil Production,407,132,35,6,0,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,17,2,11,0,0,0,0,0,0,0,-1--1--1,,1|(351,240)|
+1,18,10,2,0,0,0,0,0,0,0,-1--1--1,,1|(246,217)|
+1,19,9,2,0,0,0,0,0,0,0,-1--1--1,,1|(242,268)|
+1,20,8,2,0,0,0,0,0,0,0,-1--1--1,,1|(241,254)|
+1,21,7,2,0,0,0,0,0,0,0,-1--1--1,,1|(247,242)|
+1,22,6,1,0,0,0,0,0,0,0,-1--1--1,,1|(244,102)|
+1,23,5,1,0,0,0,0,0,0,0,-1--1--1,,1|(255,114)|
+1,24,4,1,0,0,0,0,0,0,0,-1--1--1,,1|(254,125)|
+1,25,3,1,0,0,0,0,0,0,0,-1--1--1,,1|(246,140)|
+1,26,12,2,0,0,0,0,0,0,0,-1--1--1,,1|(248,230)|
+1,27,13,2,0,0,0,0,0,0,0,-1--1--1,,1|(245,284)|
+1,28,14,11,0,0,0,0,0,0,0,-1--1--1,,1|(397,268)|
+1,29,2,14,0,0,0,0,0,0,0,-1--1--1,,1|(346,260)|
+1,30,15,1,0,0,0,0,0,0,0,-1--1--1,,1|(356,110)|
+1,31,16,1,0,0,0,0,0,0,0,-1--1--1,,1|(356,125)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*IPCC/EMF Data
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,0,0
+10,1,CO2 Concentration A,139,68,41,6,0,3,0,0,-1,0,0,0
+10,2,CO2 Concentration B,129,92,41,6,0,3,0,0,-1,0,0,0
+10,3,CO2 Concentration C,127,112,41,6,0,3,0,0,-1,0,0,0
+10,4,CO2 Concentration D,125,137,41,6,0,3,0,0,-1,0,0,0
+10,5,CO2 Concentration E,131,164,41,6,0,3,0,0,-1,0,0,0
+10,6,CO2 Emissions A,287,65,35,6,0,3,0,0,-1,0,0,0
+10,7,CO2 Emissions B,281,91,34,6,0,3,0,0,-1,0,0,0
+10,8,CO2 Emissions C,278,113,34,6,0,3,0,0,-1,0,0,0
+10,9,CO2 Emissions D,279,136,35,6,0,3,0,0,-1,0,0,0
+10,10,CO2 Emissions E,274,160,34,6,0,3,0,0,-1,0,0,0
+10,11,Energy CO2 Emissions A,421,65,48,6,0,3,0,0,-1,0,0,0
+10,12,Energy CO2 Emissions B,416,90,48,6,0,3,0,0,-1,0,0,0
+10,13,Energy CO2 Emissions C,414,113,48,6,0,3,0,0,-1,0,0,0
+10,14,Energy CO2 Emissions D,415,142,48,6,0,3,0,0,-1,0,0,0
+10,15,DICE IPCC CO2 Rad Forcing,132,224,56,6,0,3,0,0,-1,0,0,0
+10,16,DICE IPCC Other Rad Forcing,124,248,58,6,0,3,0,0,-1,0,0,0
+10,17,EMF Population,320,224,32,6,0,3,0,0,-1,0,0,0
+10,18,EMF GDP,316,251,22,6,0,3,0,0,-1,0,0,0
+10,19,Nonenergy Carbon Emissions,126,275,56,6,0,3,0,1,-1,0,0,0,128-128-128,0-0-0,|12||0-0-0
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Forecast Data
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,0,0
+10,1,Primary WEC,97,104,27,6,0,3,0,0,-1,0,0,0
+10,2,Primary EIA,92,135,25,6,0,3,0,0,-1,0,0,0
+10,3,Primary Trabalka,90,162,33,6,0,3,0,0,-1,0,0,0
+10,4,Oil EIA,92,191,16,6,0,3,0,0,-1,0,0,0
+10,5,Gas EIA,88,217,17,6,0,3,0,0,-1,0,0,0
+10,6,Coal EIA,92,242,19,6,0,3,0,0,-1,0,0,0
+10,7,OilGas EIA,173,203,23,6,0,3,0,0,-1,0,0,0
+1,8,4,7,0,0,0,0,0,0,0,-1--1--1,,1|(124,195)|
+1,9,5,7,0,0,0,0,0,0,0,-1--1--1,,1|(122,211)|
+///---\\\
+:L<%^E!@
+9:j
+13:all_data2
+23:0
+15:0,0,0,0,0,0
+19:100,28
+27:0,
+34:0,
+4:Time
+5:World Bank Population
+24:0
+25:100
+26:100
